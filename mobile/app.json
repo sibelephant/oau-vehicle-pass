@@ -1,17 +1,19 @@
 {
   "expo": {
-    "name": "native-movieapp",
-    "slug": "native-movieapp",
+    "name": "OAU Vehicle Pass",
+    "slug": "oau-vehicle-pass",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "nativemovieapp",
+    "scheme": "oauvehiclepass",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "ng.edu.oau.vehiclepass"
     },
     "android": {
+      "package": "ng.edu.oau.vehiclepass",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
