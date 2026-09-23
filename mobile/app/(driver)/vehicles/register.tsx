@@ -1,4 +1,8 @@
-import { vehiclesApi, type VehicleCategory, type RegisterVehicleData } from "@/lib/api";
+import {
+  vehiclesApi,
+  type VehicleCategory,
+  type RegisterVehicleData,
+} from "@/lib/api";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -34,8 +38,16 @@ const CATEGORIES: { value: VehicleCategory; label: string; emoji: string }[] = [
 ];
 
 const DOC_TYPES: { value: DocumentType; label: string; hint: string }[] = [
-  { value: "id", label: "Government-issued ID", hint: "NIN slip, driver's licence, passport" },
-  { value: "proof_of_ownership", label: "Proof of Ownership", hint: "Vehicle registration doc / roadworthiness cert" },
+  {
+    value: "id",
+    label: "Government-issued ID",
+    hint: "NIN slip, driver's licence, passport",
+  },
+  {
+    value: "proof_of_ownership",
+    label: "Proof of Ownership",
+    hint: "Vehicle registration doc / roadworthiness cert",
+  },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -169,16 +181,14 @@ export default function RegisterVehicleScreen() {
         ownerContact: ownerContact.trim(),
         documents: docs.map((d) => ({
           type: d.type,
-          fileUrl: d.base64
-            ? `data:image/jpeg;base64,${d.base64}`
-            : d.uri,
+          fileUrl: d.base64 ? `data:image/jpeg;base64,${d.base64}` : d.uri,
         })),
       };
       await vehiclesApi.register(payload);
       Alert.alert(
         "Registration Submitted! 🎉",
         "Your vehicle has been submitted for review. You will be notified once approved.",
-        [{ text: "OK", onPress: () => router.replace("/(driver)/") }],
+        [{ text: "OK", onPress: () => router.replace("/(driver)/" as never) }],
       );
     } catch (e: any) {
       Alert.alert("Error", e?.message ?? "Failed to register vehicle");
@@ -253,7 +263,9 @@ export default function RegisterVehicleScreen() {
                     <Text>{cat.emoji}</Text>
                     <Text
                       className={`font-semibold text-sm ${
-                        category === cat.value ? "text-emerald-300" : "text-gray-300"
+                        category === cat.value
+                          ? "text-emerald-300"
+                          : "text-gray-300"
                       }`}
                     >
                       {cat.label}
@@ -263,9 +275,27 @@ export default function RegisterVehicleScreen() {
               </View>
             </View>
 
-            <Field label="Make (optional)" value={make} onChangeText={setMake} placeholder="e.g. Toyota" autoCapitalize="words" />
-            <Field label="Model (optional)" value={model} onChangeText={setModel} placeholder="e.g. Camry" autoCapitalize="words" />
-            <Field label="Color (optional)" value={color} onChangeText={setColor} placeholder="e.g. White" autoCapitalize="words" />
+            <Field
+              label="Make (optional)"
+              value={make}
+              onChangeText={setMake}
+              placeholder="e.g. Toyota"
+              autoCapitalize="words"
+            />
+            <Field
+              label="Model (optional)"
+              value={model}
+              onChangeText={setModel}
+              placeholder="e.g. Camry"
+              autoCapitalize="words"
+            />
+            <Field
+              label="Color (optional)"
+              value={color}
+              onChangeText={setColor}
+              placeholder="e.g. White"
+              autoCapitalize="words"
+            />
           </View>
         )}
 
@@ -293,12 +323,16 @@ export default function RegisterVehicleScreen() {
         {step === 2 && (
           <View>
             <Text className="text-gray-300 text-sm mb-5">
-              Please provide photos of the following documents. This helps us verify your registration.
+              Please provide photos of the following documents. This helps us
+              verify your registration.
             </Text>
             {DOC_TYPES.map((dt) => {
               const picked = docs.find((d) => d.type === dt.value);
               return (
-                <View key={dt.value} className="bg-gray-900 rounded-2xl p-4 mb-4">
+                <View
+                  key={dt.value}
+                  className="bg-gray-900 rounded-2xl p-4 mb-4"
+                >
                   <Text className="text-white font-semibold text-sm mb-1">
                     {dt.label}
                   </Text>
@@ -366,10 +400,15 @@ export default function RegisterVehicleScreen() {
                 Documents
               </Text>
               {docs.length === 0 ? (
-                <Text className="text-gray-500 text-sm">No documents uploaded</Text>
+                <Text className="text-gray-500 text-sm">
+                  No documents uploaded
+                </Text>
               ) : (
                 docs.map((d) => (
-                  <Text key={d.type} className="text-gray-300 text-sm capitalize mb-1">
+                  <Text
+                    key={d.type}
+                    className="text-gray-300 text-sm capitalize mb-1"
+                  >
                     ✓ {d.type.replace(/_/g, " ")}
                   </Text>
                 ))

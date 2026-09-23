@@ -156,17 +156,26 @@ export const api = {
     if (from) query.set("from", from);
     if (to) query.set("to", to);
     return request<{
-      today: { total: number; granted: number; denied: number };
+      today: {
+        total: number;
+        granted: number;
+        denied: number;
+        qr: number;
+        anpr: number;
+        manual: number;
+        peakHour: number | null;
+        peakHourCount: number;
+      };
     }>(`/api/reports/summary?${query.toString()}`).then(({ today }) => ({
       data: {
         totalEntries: today.total,
         totalGranted: today.granted,
         totalDenied: today.denied,
-        qrCount: 0,
-        anprCount: 0,
-        manualCount: 0,
-        peakHour: null,
-        peakHourCount: 0,
+        qrCount: today.qr,
+        anprCount: today.anpr,
+        manualCount: today.manual,
+        peakHour: today.peakHour,
+        peakHourCount: today.peakHourCount,
       },
     }));
   },

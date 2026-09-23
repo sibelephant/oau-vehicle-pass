@@ -73,7 +73,9 @@ export default function DriverHome() {
         <View className="flex-row items-center justify-between">
           <View>
             <Text className="text-gray-400 text-sm">Welcome back,</Text>
-            <Text className="text-white text-2xl font-bold">{user?.name ?? "..."}</Text>
+            <Text className="text-white text-2xl font-bold">
+              {user?.name ?? "..."}
+            </Text>
           </View>
           <Pressable
             onPress={signOut}
@@ -100,15 +102,21 @@ export default function DriverHome() {
       {/* Stats row */}
       <View className="flex-row gap-3 px-6 mb-6">
         <View className="flex-1 bg-gray-900 rounded-2xl p-4">
-          <Text className="text-3xl font-bold text-white">{vehicles.length}</Text>
+          <Text className="text-3xl font-bold text-white">
+            {vehicles.length}
+          </Text>
           <Text className="text-gray-400 text-xs mt-1">Registered</Text>
         </View>
         <View className="flex-1 bg-emerald-900/50 rounded-2xl p-4">
-          <Text className="text-3xl font-bold text-emerald-300">{approvedCount}</Text>
+          <Text className="text-3xl font-bold text-emerald-300">
+            {approvedCount}
+          </Text>
           <Text className="text-gray-400 text-xs mt-1">Active Passes</Text>
         </View>
         <View className="flex-1 bg-amber-900/30 rounded-2xl p-4">
-          <Text className="text-3xl font-bold text-amber-300">{pendingCount}</Text>
+          <Text className="text-3xl font-bold text-amber-300">
+            {pendingCount}
+          </Text>
           <Text className="text-gray-400 text-xs mt-1">Pending</Text>
         </View>
       </View>
@@ -116,7 +124,7 @@ export default function DriverHome() {
       {/* Quick action */}
       <View className="px-6 mb-6">
         <Pressable
-          onPress={() => router.push("/(driver)/vehicles/register")}
+          onPress={() => router.push("/(driver)/vehicles/register" as never)}
           className="bg-emerald-600 rounded-2xl py-4 px-6 flex-row items-center justify-between active:bg-emerald-700"
         >
           <View>
@@ -143,7 +151,8 @@ export default function DriverHome() {
           <View className="bg-gray-900 rounded-2xl p-8 items-center">
             <Text className="text-4xl mb-3">🚗</Text>
             <Text className="text-gray-400 text-center text-sm">
-              No vehicles registered yet.{"\n"}Tap the button above to get started.
+              No vehicles registered yet.{"\n"}Tap the button above to get
+              started.
             </Text>
           </View>
         ) : (

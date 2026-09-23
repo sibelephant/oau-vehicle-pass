@@ -30,14 +30,17 @@ export default function GateResultScreen() {
   // Override state
   const [showOverride, setShowOverride] = useState(false);
   const [overrideReason, setOverrideReason] = useState("");
-  const [overrideDecision, setOverrideDecision] = useState<"granted" | "denied">(
-    isGranted ? "denied" : "granted",
-  );
+  const [overrideDecision, setOverrideDecision] = useState<
+    "granted" | "denied"
+  >(isGranted ? "denied" : "granted");
   const [submitting, setSubmitting] = useState(false);
 
   async function handleOverride() {
     if (overrideReason.trim().length < 5) {
-      Alert.alert("Required", "Please provide a reason of at least 5 characters");
+      Alert.alert(
+        "Required",
+        "Please provide a reason of at least 5 characters",
+      );
       return;
     }
     setSubmitting(true);
@@ -51,7 +54,7 @@ export default function GateResultScreen() {
       Alert.alert(
         "Override Logged",
         `Decision changed to: ${overrideDecision.toUpperCase()}`,
-        [{ text: "OK", onPress: () => router.replace("/(gate)/") }],
+        [{ text: "OK", onPress: () => router.replace("/(gate)/" as never) }],
       );
     } catch (e: any) {
       Alert.alert("Error", e?.message ?? "Could not log override");
@@ -107,7 +110,9 @@ export default function GateResultScreen() {
           </View>
         ) : (
           <View className="bg-gray-900 rounded-2xl p-5 items-center">
-            <Text className="text-gray-400 text-sm">No vehicle record found</Text>
+            <Text className="text-gray-400 text-sm">
+              No vehicle record found
+            </Text>
           </View>
         )}
 
@@ -170,7 +175,9 @@ export default function GateResultScreen() {
                 onPress={() => setShowOverride(false)}
                 className="flex-1 py-3 rounded-xl bg-gray-700 items-center"
               >
-                <Text className="text-gray-300 font-semibold text-sm">Cancel</Text>
+                <Text className="text-gray-300 font-semibold text-sm">
+                  Cancel
+                </Text>
               </Pressable>
               <Pressable
                 onPress={handleOverride}
@@ -180,7 +187,9 @@ export default function GateResultScreen() {
                 {submitting ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text className="text-white font-bold text-sm">Log Override</Text>
+                  <Text className="text-white font-bold text-sm">
+                    Log Override
+                  </Text>
                 )}
               </Pressable>
             </View>
@@ -189,7 +198,7 @@ export default function GateResultScreen() {
 
         {/* Back to scanner */}
         <Pressable
-          onPress={() => router.replace("/(gate)/")}
+          onPress={() => router.replace("/(gate)/" as never)}
           className="bg-emerald-700 rounded-2xl py-4 items-center active:bg-emerald-800 mt-2"
         >
           <Text className="text-white font-bold text-base">← Next Vehicle</Text>

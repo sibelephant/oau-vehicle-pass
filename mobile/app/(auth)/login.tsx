@@ -26,9 +26,15 @@ export default function LoginScreen() {
     }
     setLoading(true);
     try {
-      const result = await authClient.signIn.email({ email: email.trim(), password });
+      const result = await authClient.signIn.email({
+        email: email.trim(),
+        password,
+      });
       if (result.error) {
-        Alert.alert("Login Failed", result.error.message ?? "Invalid credentials");
+        Alert.alert(
+          "Login Failed",
+          result.error.message ?? "Invalid credentials",
+        );
       }
       // Navigation handled by root layout auth guard
     } catch (e: any) {
@@ -111,7 +117,7 @@ export default function LoginScreen() {
 
         {/* Register link */}
         <Pressable
-          onPress={() => router.push("/(auth)/register")}
+          onPress={() => router.push("/(auth)/register" as never)}
           className="mt-6 items-center"
         >
           <Text className="text-gray-400 text-sm">

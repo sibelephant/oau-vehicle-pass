@@ -7,7 +7,9 @@ import { Platform } from "react-native";
  */
 export const API_BASE =
   process.env.EXPO_PUBLIC_API_URL ??
-  (Platform.OS === "android" ? "http://10.0.2.2:3000" : "http://localhost:3000");
+  (Platform.OS === "android"
+    ? "http://10.0.2.2:3000"
+    : "http://localhost:3000");
 
 type ApiOptions = {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
@@ -45,8 +47,11 @@ async function request<T>(path: string, options: ApiOptions = {}): Promise<T> {
   if (!res.ok) {
     let message = `HTTP ${res.status}`;
     try {
-      const json = await res.json();
-      message = json.error ?? message;
+      const json: unknown = await res.json();
+      if (typeof json === "object" && json !== null && "error" in json) {
+        const error = json.error;
+        if (typeof error === "string") message = error;
+      }
     } catch {
       // ignore parse errors
     }
@@ -105,7 +110,10 @@ export interface RegisterVehicleData {
   color?: string;
   ownerName: string;
   ownerContact: string;
-  documents?: { type: "id" | "proof_of_ownership" | "other"; fileUrl: string }[];
+  documents?: {
+    type: "id" | "proof_of_ownership" | "other";
+    fileUrl: string;
+  }[];
 }
 
 export const vehiclesApi = {
@@ -141,7 +149,10 @@ export interface GateDecision {
 
 export const gateApi = {
   scanQr: (token: string) =>
-    request<GateDecision>("/api/gate/scan-qr", { method: "POST", body: { token } }),
+    request<GateDecision>("/api/gate/scan-qr", {
+      method: "POST",
+      body: { token },
+    }),
 
   scanPlate: (plateNumber: string, plateImageUrl?: string) =>
     request<GateDecision>("/api/gate/scan-plate", {
@@ -154,7 +165,8 @@ export const gateApi = {
     plateNumber?: string;
     decision: "granted" | "denied";
     reason: string;
-  }) => request<AccessLog>("/api/gate/override", { method: "POST", body: data }),
+  }) =>
+    request<AccessLog>("/api/gate/override", { method: "POST", body: data }),
 
   todayLog: () => request<AccessLog[]>("/api/gate/today"),
 };

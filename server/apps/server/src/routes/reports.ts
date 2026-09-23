@@ -24,16 +24,22 @@ router.get("/access-log", adminOrOfficer, async (req, res) => {
 
   const conditions = [];
   if (req.query.from) {
-    conditions.push(gte(accessLog.timestamp, new Date(req.query.from as string)));
+    conditions.push(
+      gte(accessLog.timestamp, new Date(req.query.from as string)),
+    );
   }
   if (req.query.to) {
     conditions.push(lte(accessLog.timestamp, new Date(req.query.to as string)));
   }
   if (req.query.decision) {
-    conditions.push(eq(accessLog.decision, req.query.decision as "granted" | "denied"));
+    conditions.push(
+      eq(accessLog.decision, req.query.decision as "granted" | "denied"),
+    );
   }
   if (req.query.channel) {
-    conditions.push(eq(accessLog.channel, req.query.channel as "qr" | "anpr" | "manual"));
+    conditions.push(
+      eq(accessLog.channel, req.query.channel as "qr" | "anpr" | "manual"),
+    );
   }
 
   // Use select() API which fully supports arbitrary where conditions
@@ -63,7 +69,9 @@ router.get("/access-log", adminOrOfficer, async (req, res) => {
 router.get("/peak-hours", requireRole("admin"), async (req, res) => {
   const conditions = [];
   if (req.query.from) {
-    conditions.push(gte(accessLog.timestamp, new Date(req.query.from as string)));
+    conditions.push(
+      gte(accessLog.timestamp, new Date(req.query.from as string)),
+    );
   }
   if (req.query.to) {
     conditions.push(lte(accessLog.timestamp, new Date(req.query.to as string)));
@@ -75,6 +83,9 @@ router.get("/peak-hours", requireRole("admin"), async (req, res) => {
       total: sql<number>`COUNT(*)::int`,
       granted: sql<number>`SUM(CASE WHEN ${accessLog.decision} = 'granted' THEN 1 ELSE 0 END)::int`,
       denied: sql<number>`SUM(CASE WHEN ${accessLog.decision} = 'denied' THEN 1 ELSE 0 END)::int`,
+      qr: sql<number>`SUM(CASE WHEN ${accessLog.channel} = 'qr' THEN 1 ELSE 0 END)::int`,
+      anpr: sql<number>`SUM(CASE WHEN ${accessLog.channel} = 'anpr' THEN 1 ELSE 0 END)::int`,
+      manual: sql<number>`SUM(CASE WHEN ${accessLog.channel} = 'manual' THEN 1 ELSE 0 END)::int`,
     })
     .from(accessLog)
     .where(conditions.length > 0 ? and(...conditions) : undefined)
@@ -87,20 +98,56 @@ router.get("/peak-hours", requireRole("admin"), async (req, res) => {
 // ─── Summary Stats ────────────────────────────────────────────────────────────
 
 /** GET /api/reports/summary — quick stats for the dashboard */
-router.get("/summary", adminOrOfficer, async (_req, res) => {
+router.get("/summary", adminOrOfficer, async (req, res) => {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
+  const from = req.query.from ? new Date(req.query.from as string) : todayStart;
+  const toValue = req.query.to as string | undefined;
+  const to = toValue
+    ? new Date(
+        /^\d{4}-\d{2}-\d{2}$/.test(toValue)
+          ? `${toValue}T23:59:59.999Z`
+          : toValue,
+      )
+    : undefined;
+  const summaryConditions = [gte(accessLog.timestamp, from)];
+  if (to) summaryConditions.push(lte(accessLog.timestamp, to));
 
   const [todayStats] = await db
     .select({
       total: sql<number>`COUNT(*)::int`,
       granted: sql<number>`SUM(CASE WHEN ${accessLog.decision} = 'granted' THEN 1 ELSE 0 END)::int`,
       denied: sql<number>`SUM(CASE WHEN ${accessLog.decision} = 'denied' THEN 1 ELSE 0 END)::int`,
+      qr: sql<number>`SUM(CASE WHEN ${accessLog.channel} = 'qr' THEN 1 ELSE 0 END)::int`,
+      anpr: sql<number>`SUM(CASE WHEN ${accessLog.channel} = 'anpr' THEN 1 ELSE 0 END)::int`,
+      manual: sql<number>`SUM(CASE WHEN ${accessLog.channel} = 'manual' THEN 1 ELSE 0 END)::int`,
     })
     .from(accessLog)
-    .where(gte(accessLog.timestamp, todayStart));
+    .where(and(...summaryConditions));
 
-  res.json({ today: todayStats });
+  const [peakHour] = await db
+    .select({
+      hour: sql<number>`EXTRACT(HOUR FROM ${accessLog.timestamp})::int`,
+      total: sql<number>`COUNT(*)::int`,
+    })
+    .from(accessLog)
+    .where(and(...summaryConditions))
+    .groupBy(sql`EXTRACT(HOUR FROM ${accessLog.timestamp})`)
+    .orderBy(sql`COUNT(*) DESC`)
+    .limit(1);
+
+  res.json({
+    today: {
+      total: todayStats?.total ?? 0,
+      granted: todayStats?.granted ?? 0,
+      denied: todayStats?.denied ?? 0,
+      qr: todayStats?.qr ?? 0,
+      anpr: todayStats?.anpr ?? 0,
+      manual: todayStats?.manual ?? 0,
+      peakHour: peakHour?.hour ?? null,
+      peakHourCount: peakHour?.total ?? 0,
+    },
+  });
 });
 
 export default router;

@@ -1,5 +1,5 @@
 import { useAuth } from "@/app/_layout";
-import { gateApi, type GateDecision } from "@/lib/api";
+import { gateApi } from "@/lib/api";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -13,17 +13,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 
-// CameraView from expo-camera — dynamically imported to avoid crashing
-// if expo-camera isn't installed yet.
-let CameraView: any = null;
-let useCameraPermissions: any = null;
-try {
-  const mod = require("expo-camera");
-  CameraView = mod.CameraView;
-  useCameraPermissions = mod.useCameraPermissions;
-} catch {
-  // not available
-}
+import { CameraView, useCameraPermissions } from "expo-camera";
 
 type ScanMode = "qr" | "plate";
 
@@ -37,14 +27,15 @@ export default function GateScanScreen() {
   const lastScanRef = useRef<number>(0);
 
   // Camera permissions
-  const permHook = useCameraPermissions?.();
-  const [permission, requestPermission] = permHook ?? [null, () => {}];
+  const [permission, requestPermission] = useCameraPermissions();
+  const cameraRef = useRef<CameraView>(null);
+  const [plateImageUri, setPlateImageUri] = useState<string | null>(null);
 
   useEffect(() => {
-    if (mode === "qr" && CameraView && !permission?.granted) {
+    if (!permission?.granted) {
       requestPermission();
     }
-  }, [mode]);
+  }, [permission?.granted, requestPermission]);
 
   // ─── QR scan handler ───────────────────────────────────────────────────────
 
@@ -60,8 +51,12 @@ export default function GateScanScreen() {
       try {
         const result = await gateApi.scanQr(data);
         router.push({
-          pathname: "/(gate)/result",
-          params: { decision: result.decision, reason: result.reason ?? "", vehicleJson: JSON.stringify(result.vehicle) },
+          pathname: "/(gate)/result" as never,
+          params: {
+            decision: result.decision,
+            reason: result.reason ?? "",
+            vehicleJson: JSON.stringify(result.vehicle),
+          },
         });
       } catch (e: any) {
         Alert.alert("Scan Error", e?.message ?? "Could not process QR");
@@ -82,12 +77,20 @@ export default function GateScanScreen() {
     }
     setProcessing(true);
     try {
-      const result = await gateApi.scanPlate(plateInput.trim());
+      const result = await gateApi.scanPlate(
+        plateInput.trim(),
+        plateImageUri ?? undefined,
+      );
       router.push({
-        pathname: "/(gate)/result",
-        params: { decision: result.decision, reason: result.reason ?? "", vehicleJson: JSON.stringify(result.vehicle) },
+        pathname: "/(gate)/result" as never,
+        params: {
+          decision: result.decision,
+          reason: result.reason ?? "",
+          vehicleJson: JSON.stringify(result.vehicle),
+        },
       });
       setPlateInput("");
+      setPlateImageUri(null);
     } catch (e: any) {
       Alert.alert("Error", e?.message ?? "Could not look up plate");
     } finally {
@@ -110,7 +113,7 @@ export default function GateScanScreen() {
         </View>
         <View className="flex-row gap-2">
           <Pressable
-            onPress={() => router.push("/(gate)/log")}
+            onPress={() => router.push("/(gate)/log" as never)}
             className="bg-gray-800 rounded-full px-4 py-2"
           >
             <Text className="text-gray-300 text-sm">📋 Log</Text>
@@ -129,10 +132,16 @@ export default function GateScanScreen() {
         {(["qr", "plate"] as ScanMode[]).map((m) => (
           <Pressable
             key={m}
-            onPress={() => { setMode(m); setScanning(true); setPlateInput(""); }}
+            onPress={() => {
+              setMode(m);
+              setScanning(true);
+              setPlateInput("");
+            }}
             className={`flex-1 py-3 rounded-xl items-center ${mode === m ? "bg-emerald-700" : ""}`}
           >
-            <Text className={`font-bold text-sm ${mode === m ? "text-white" : "text-gray-400"}`}>
+            <Text
+              className={`font-bold text-sm ${mode === m ? "text-white" : "text-gray-400"}`}
+            >
               {m === "qr" ? "📱 QR Code" : "🔢 Plate Number"}
             </Text>
           </Pressable>
@@ -143,13 +152,7 @@ export default function GateScanScreen() {
       <View className="flex-1 mx-5 mb-5">
         {mode === "qr" ? (
           <View className="flex-1 rounded-3xl overflow-hidden bg-black">
-            {!CameraView ? (
-              <View className="flex-1 items-center justify-center">
-                <Text className="text-gray-400 text-center px-8">
-                  Camera not available.{"\n"}Install expo-camera to enable QR scanning.
-                </Text>
-              </View>
-            ) : !permission?.granted ? (
+            {!permission?.granted ? (
               <View className="flex-1 items-center justify-center gap-4">
                 <Text className="text-6xl">📷</Text>
                 <Text className="text-white text-center px-8">
@@ -193,10 +196,41 @@ export default function GateScanScreen() {
             )}
           </View>
         ) : (
-          /* Plate number input mode */
-          <View className="flex-1 items-center justify-center gap-5">
+          /* Plate capture and lookup mode */
+          <View className="flex-1 gap-4">
+            <View className="flex-1 rounded-3xl overflow-hidden bg-black">
+              {permission?.granted ? (
+                <CameraView ref={cameraRef} style={{ flex: 1 }} facing="back" />
+              ) : (
+                <View className="flex-1 items-center justify-center">
+                  <Text className="text-gray-400 text-center px-8">
+                    Camera access is needed to capture a plate image
+                  </Text>
+                </View>
+              )}
+            </View>
             <View className="bg-gray-900 rounded-3xl p-8 w-full items-center">
-              <Text className="text-gray-400 text-sm mb-3">Enter vehicle plate number</Text>
+              <Text className="text-gray-400 text-sm mb-3">
+                Capture the plate, then enter the detected number
+              </Text>
+              <Pressable
+                onPress={async () => {
+                  const photo = await cameraRef.current?.takePictureAsync({
+                    quality: 0.7,
+                    base64: true,
+                  });
+                  if (photo?.base64)
+                    setPlateImageUri(`data:image/jpeg;base64,${photo.base64}`);
+                }}
+                disabled={!permission?.granted || processing}
+                className="mb-4 bg-gray-800 rounded-xl px-5 py-3"
+              >
+                <Text className="text-emerald-400 font-bold">
+                  {plateImageUri
+                    ? "Plate image captured"
+                    : "Capture plate image"}
+                </Text>
+              </Pressable>
               <TextInput
                 className="bg-white text-gray-900 text-center text-3xl font-black tracking-widest rounded-2xl px-6 py-4 w-full"
                 placeholder="ABC 123 XY"

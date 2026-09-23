@@ -19,6 +19,8 @@ import {
 
 export const OverviewView: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [summary, setSummary] = useState<TrafficSummary>({
     totalEntries: 0,
     totalGranted: 0,
@@ -37,9 +39,13 @@ export const OverviewView: React.FC = () => {
     try {
       setError(null);
       const [sumRes, peakRes, logRes] = await Promise.all([
-        api.getSummary(),
-        api.getPeakHours(),
-        api.getAccessLog({ limit: 6 }),
+        api.getSummary(dateFrom || undefined, dateTo || undefined),
+        api.getPeakHours(dateFrom || undefined, dateTo || undefined),
+        api.getAccessLog({
+          limit: 6,
+          from: dateFrom || undefined,
+          to: dateTo || undefined,
+        }),
       ]);
 
       setSummary(sumRes.data);
@@ -54,7 +60,7 @@ export const OverviewView: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [dateFrom, dateTo]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -107,6 +113,61 @@ export const OverviewView: React.FC = () => {
         >
           <RefreshCw size={14} className={refreshing ? "spin-animation" : ""} />
           <span>{refreshing ? "Refreshing..." : "Refresh Stats"}</span>
+        </button>
+      </div>
+
+      <div
+        className="glass-panel"
+        style={{
+          padding: "16px 20px",
+          display: "flex",
+          alignItems: "end",
+          gap: "12px",
+          flexWrap: "wrap",
+        }}
+      >
+        <label
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "6px",
+            fontSize: "0.75rem",
+            color: "var(--text-muted)",
+          }}
+        >
+          From
+          <input
+            className="form-input"
+            type="date"
+            value={dateFrom}
+            onChange={(event) => setDateFrom(event.target.value)}
+          />
+        </label>
+        <label
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "6px",
+            fontSize: "0.75rem",
+            color: "var(--text-muted)",
+          }}
+        >
+          To
+          <input
+            className="form-input"
+            type="date"
+            value={dateTo}
+            onChange={(event) => setDateTo(event.target.value)}
+          />
+        </label>
+        <button
+          className="btn btn-secondary btn-sm"
+          onClick={() => {
+            setDateFrom("");
+            setDateTo("");
+          }}
+        >
+          Reset range
         </button>
       </div>
 

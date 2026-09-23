@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { Router } from "express";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
@@ -11,10 +11,41 @@ import { db } from "../services";
 
 const router = Router();
 
+async function attachDocuments<T extends { id: string }>(vehicles: T[]) {
+  if (vehicles.length === 0)
+    return vehicles.map((item) => ({ ...item, documents: [] }));
+
+  const documents = await db
+    .select()
+    .from(vehicleDocument)
+    .where(
+      inArray(
+        vehicleDocument.vehicleId,
+        vehicles.map((item) => item.id),
+      ),
+    );
+  const documentsByVehicle = new Map<string, typeof documents>();
+
+  for (const document of documents) {
+    const vehicleDocuments = documentsByVehicle.get(document.vehicleId) ?? [];
+    vehicleDocuments.push(document);
+    documentsByVehicle.set(document.vehicleId, vehicleDocuments);
+  }
+
+  return vehicles.map((item) => ({
+    ...item,
+    documents: documentsByVehicle.get(item.id) ?? [],
+  }));
+}
+
 // ─── Validation ──────────────────────────────────────────────────────────────
 
 const registerSchema = z.object({
-  plateNumber: z.string().min(2).max(20).transform((v) => v.toUpperCase().trim()),
+  plateNumber: z
+    .string()
+    .min(2)
+    .max(20)
+    .transform((v) => v.toUpperCase().trim()),
   category: z.enum(["staff", "student", "visitor", "commercial"]),
   make: z.string().max(60).optional(),
   model: z.string().max(60).optional(),
@@ -51,9 +82,11 @@ router.post("/", requireAuth, async (req, res) => {
     .returning();
 
   if (documents?.length) {
-    await db.insert(vehicleDocument).values(
-      documents.map((doc) => ({ id: randomUUID(), vehicleId, ...doc })),
-    );
+    await db
+      .insert(vehicleDocument)
+      .values(
+        documents.map((doc) => ({ id: randomUUID(), vehicleId, ...doc })),
+      );
   }
 
   res.status(201).json(newVehicle);
@@ -73,7 +106,7 @@ router.get("/my", requireAuth, async (req, res) => {
     },
     orderBy: (v, { desc }) => [desc(v.createdAt)],
   });
-  res.json(vehicles);
+  res.json(await attachDocuments(vehicles));
 });
 
 /** GET /api/vehicles/:id — driver fetches a single vehicle */
@@ -93,10 +126,12 @@ router.get("/:id", requireAuth, async (req, res) => {
 /** GET /api/vehicles — admin/officer lists all vehicles */
 router.get("/", requireRole("admin", "gate_officer"), async (_req, res) => {
   const vehicles = await db.query.vehicle.findMany({
-    with: { passes: { where: { isRevoked: false }, limit: 1 } },
+    with: {
+      passes: { where: { isRevoked: false }, limit: 1 },
+    },
     orderBy: (v, { desc }) => [desc(v.createdAt)],
   });
-  res.json(vehicles);
+  res.json(await attachDocuments(vehicles));
 });
 
 /** PATCH /api/vehicles/:id/status — admin approves or rejects */
