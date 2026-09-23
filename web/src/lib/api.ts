@@ -7,11 +7,10 @@ export interface AccessLogItem {
     plateNumber: string;
     channel: "qr" | "anpr" | "manual";
     decision: "granted" | "denied";
-    reason: string | null;
+    overrideReason: string | null;
     timestamp: string;
     gateOfficerId: string | null;
-    confidence: number | null;
-    capturedImageUrl: string | null;
+    plateImageUrl: string | null;
   };
   vehicle: {
     id: string;
@@ -22,9 +21,8 @@ export interface AccessLogItem {
     color: string | null;
     ownerName: string;
     ownerContact: string;
-    status: "pending" | "approved" | "rejected";
-    isBlacklisted: boolean;
-    blacklistReason: string | null;
+    status: "pending" | "approved" | "rejected" | "blacklisted";
+    rejectionReason: string | null;
   } | null;
   officerName: string | null;
 }
@@ -38,7 +36,7 @@ export interface VehiclePendingItem {
   color: string | null;
   ownerName: string;
   ownerContact: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "blacklisted";
   createdAt: string;
   documents: Array<{
     id: string;
@@ -57,7 +55,7 @@ export interface VehicleItem {
   color: string | null;
   ownerName: string;
   ownerContact: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "blacklisted";
   isBlacklisted: boolean;
   blacklistReason: string | null;
   createdAt: string;
@@ -77,6 +75,19 @@ export interface TrafficSummary {
   manualCount: number;
   peakHour: number | null;
   peakHourCount: number;
+}
+
+type BackendVehicle = Omit<VehicleItem, "isBlacklisted" | "blacklistReason"> & {
+  rejectionReason: string | null;
+};
+
+function normalizeVehicle(vehicle: BackendVehicle): VehicleItem {
+  return {
+    ...vehicle,
+    isBlacklisted: vehicle.status === "blacklisted",
+    blacklistReason:
+      vehicle.status === "blacklisted" ? vehicle.rejectionReason : null,
+  };
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -106,14 +117,16 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export const api = {
   // Reports
-  getAccessLog: (params: {
-    page?: number;
-    limit?: number;
-    from?: string;
-    to?: string;
-    decision?: string;
-    channel?: string;
-  } = {}) => {
+  getAccessLog: (
+    params: {
+      page?: number;
+      limit?: number;
+      from?: string;
+      to?: string;
+      decision?: string;
+      channel?: string;
+    } = {},
+  ) => {
     const query = new URLSearchParams();
     if (params.page) query.set("page", String(params.page));
     if (params.limit) query.set("limit", String(params.limit));
@@ -123,7 +136,7 @@ export const api = {
     if (params.channel) query.set("channel", params.channel);
 
     return request<{ data: AccessLogItem[]; page: number; limit: number }>(
-      `/api/reports/access-log?${query.toString()}`
+      `/api/reports/access-log?${query.toString()}`,
     );
   },
 
@@ -131,44 +144,78 @@ export const api = {
     const query = new URLSearchParams();
     if (from) query.set("from", from);
     if (to) query.set("to", to);
-    return request<{ data: PeakHourItem[] }>(`/api/reports/peak-hours?${query.toString()}`);
+    return request<Array<{ hour: number; total: number }>>(
+      `/api/reports/peak-hours?${query.toString()}`,
+    ).then((rows) => ({
+      data: rows.map((row) => ({ hour: row.hour, count: row.total })),
+    }));
   },
 
   getSummary: (from?: string, to?: string) => {
     const query = new URLSearchParams();
     if (from) query.set("from", from);
     if (to) query.set("to", to);
-    return request<{ data: TrafficSummary }>(`/api/reports/summary?${query.toString()}`);
+    return request<{
+      today: { total: number; granted: number; denied: number };
+    }>(`/api/reports/summary?${query.toString()}`).then(({ today }) => ({
+      data: {
+        totalEntries: today.total,
+        totalGranted: today.granted,
+        totalDenied: today.denied,
+        qrCount: 0,
+        anprCount: 0,
+        manualCount: 0,
+        peakHour: null,
+        peakHourCount: 0,
+      },
+    }));
   },
 
   // Vehicles
   getPendingVehicles: () => {
-    return request<{ data: VehiclePendingItem[] }>("/api/vehicles/pending");
+    return request<BackendVehicle[]>("/api/vehicles").then((vehicles) => ({
+      data: vehicles
+        .filter((vehicle) => vehicle.status === "pending")
+        .map((vehicle) => ({ ...vehicle, documents: [] })),
+    }));
   },
 
   updateVehicleStatus: (
     id: string,
     status: "approved" | "rejected",
-    rejectionReason?: string
+    rejectionReason?: string,
   ) => {
-    return request<{ data: VehicleItem }>(`/api/vehicles/${id}/status`, {
+    return request<BackendVehicle>(`/api/vehicles/${id}/status`, {
       method: "PATCH",
       body: JSON.stringify({ status, rejectionReason }),
-    });
+    }).then((vehicle) => ({ data: normalizeVehicle(vehicle) }));
   },
 
   getBlacklistedVehicles: () => {
-    return request<{ data: VehicleItem[] }>("/api/vehicles/blacklist");
+    return request<BackendVehicle[]>("/api/vehicles").then((vehicles) => ({
+      data: vehicles
+        .filter((vehicle) => vehicle.status === "blacklisted")
+        .map(normalizeVehicle),
+    }));
   },
 
   setBlacklistStatus: (
     id: string,
     isBlacklisted: boolean,
-    blacklistReason?: string
+    blacklistReason?: string,
   ) => {
-    return request<{ data: VehicleItem }>(`/api/vehicles/${id}/blacklist`, {
+    if (isBlacklisted) {
+      return request<BackendVehicle>(`/api/vehicles/${id}/blacklist`, {
+        method: "PATCH",
+      }).then((vehicle) => ({ data: normalizeVehicle(vehicle) }));
+    }
+
+    return request<BackendVehicle>(`/api/vehicles/${id}/status`, {
       method: "PATCH",
-      body: JSON.stringify({ isBlacklisted, blacklistReason }),
-    });
+      body: JSON.stringify({
+        status: "approved",
+        rejectionReason: blacklistReason,
+      }),
+    }).then((vehicle) => ({ data: normalizeVehicle(vehicle) }));
   },
 };

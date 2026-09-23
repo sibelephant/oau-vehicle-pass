@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Car, 
-  CheckCircle, 
-  XCircle, 
-  FileText, 
-  Eye, 
-  AlertCircle, 
+import {
+  CheckCircle,
+  XCircle,
+  FileText,
+  Eye,
+  AlertCircle,
   RefreshCw,
   Search,
   ExternalLink,
-  ShieldCheck,
-  X
+  X,
 } from "lucide-react";
 import { api, type VehiclePendingItem } from "../lib/api";
 
@@ -19,11 +17,16 @@ export const ApprovalsView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedVehicle, setSelectedVehicle] = useState<VehiclePendingItem | null>(null);
-  const [rejectingVehicle, setRejectingVehicle] = useState<VehiclePendingItem | null>(null);
+  const [selectedVehicle, setSelectedVehicle] =
+    useState<VehiclePendingItem | null>(null);
+  const [rejectingVehicle, setRejectingVehicle] =
+    useState<VehiclePendingItem | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [processingId, setProcessingId] = useState<string | null>(null);
-  const [actionMessage, setActionMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [actionMessage, setActionMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const fetchPending = async (showRefreshing = false) => {
     if (showRefreshing) setRefreshing(true);
@@ -32,7 +35,10 @@ export const ApprovalsView: React.FC = () => {
       const res = await api.getPendingVehicles();
       setVehicles(res.data);
     } catch (err: any) {
-      setActionMessage({ type: "error", text: err.message || "Failed to load pending registrations" });
+      setActionMessage({
+        type: "error",
+        text: err.message || "Failed to load pending registrations",
+      });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -50,12 +56,15 @@ export const ApprovalsView: React.FC = () => {
       await api.updateVehicleStatus(vehicleItem.id, "approved");
       setActionMessage({
         type: "success",
-        text: `Vehicle ${vehicleItem.plateNumber} approved successfully! QR pass has been generated.`,
+        text: `Vehicle ${vehicleItem.plateNumber} approved successfully.`,
       });
       setVehicles((prev) => prev.filter((v) => v.id !== vehicleItem.id));
       if (selectedVehicle?.id === vehicleItem.id) setSelectedVehicle(null);
     } catch (err: any) {
-      setActionMessage({ type: "error", text: err.message || "Approval failed" });
+      setActionMessage({
+        type: "error",
+        text: err.message || "Approval failed",
+      });
     } finally {
       setProcessingId(null);
     }
@@ -68,7 +77,7 @@ export const ApprovalsView: React.FC = () => {
       await api.updateVehicleStatus(
         rejectingVehicle.id,
         "rejected",
-        rejectionReason.trim() || "Registration requirements not satisfied"
+        rejectionReason.trim() || "Registration requirements not satisfied",
       );
       setActionMessage({
         type: "success",
@@ -79,7 +88,10 @@ export const ApprovalsView: React.FC = () => {
       setRejectionReason("");
       if (selectedVehicle?.id === rejectingVehicle.id) setSelectedVehicle(null);
     } catch (err: any) {
-      setActionMessage({ type: "error", text: err.message || "Rejection failed" });
+      setActionMessage({
+        type: "error",
+        text: err.message || "Rejection failed",
+      });
     } finally {
       setProcessingId(null);
     }
@@ -96,15 +108,37 @@ export const ApprovalsView: React.FC = () => {
   });
 
   return (
-    <div style={{ padding: "32px", display: "flex", flexDirection: "column", gap: "24px" }}>
+    <div
+      style={{
+        padding: "32px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "24px",
+      }}
+    >
       {/* Top Banner */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "16px",
+        }}
+      >
         <div>
           <h2 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0 }}>
             Vehicle Registration Approvals
           </h2>
-          <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "4px" }}>
-            Review applicant documents, verify vehicle ownership, and authorize digital campus passes.
+          <p
+            style={{
+              fontSize: "0.85rem",
+              color: "var(--text-muted)",
+              marginTop: "4px",
+            }}
+          >
+            Review applicant documents, verify vehicle ownership, and authorize
+            digital campus passes.
           </p>
         </div>
 
@@ -119,18 +153,27 @@ export const ApprovalsView: React.FC = () => {
       </div>
 
       {actionMessage && (
-        <div style={{
-          padding: "14px 18px",
-          borderRadius: "8px",
-          background: actionMessage.type === "success" ? "var(--status-success-bg)" : "var(--status-danger-bg)",
-          border: `1px solid ${actionMessage.type === "success" ? "var(--status-success-border)" : "var(--status-danger-border)"}`,
-          color: actionMessage.type === "success" ? "#6ee7b7" : "#fca5a5",
-          fontSize: "0.875rem",
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-        }}>
-          {actionMessage.type === "success" ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
+        <div
+          style={{
+            padding: "14px 18px",
+            borderRadius: "8px",
+            background:
+              actionMessage.type === "success"
+                ? "var(--status-success-bg)"
+                : "var(--status-danger-bg)",
+            border: `1px solid ${actionMessage.type === "success" ? "var(--status-success-border)" : "var(--status-danger-border)"}`,
+            color: actionMessage.type === "success" ? "#6ee7b7" : "#fca5a5",
+            fontSize: "0.875rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
+          {actionMessage.type === "success" ? (
+            <CheckCircle size={18} />
+          ) : (
+            <AlertCircle size={18} />
+          )}
           <span>{actionMessage.text}</span>
         </div>
       )}
@@ -138,7 +181,16 @@ export const ApprovalsView: React.FC = () => {
       {/* Filter / Search Bar */}
       <div className="glass-panel" style={{ padding: "16px 20px" }}>
         <div style={{ position: "relative", maxWidth: "400px" }}>
-          <Search size={16} color="var(--text-dim)" style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)" }} />
+          <Search
+            size={16}
+            color="var(--text-dim)"
+            style={{
+              position: "absolute",
+              left: "12px",
+              top: "50%",
+              transform: "translateY(-50%)",
+            }}
+          />
           <input
             type="text"
             className="form-input"
@@ -168,8 +220,17 @@ export const ApprovalsView: React.FC = () => {
             <tbody>
               {filteredVehicles.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: "center", padding: "40px", color: "var(--text-dim)" }}>
-                    {loading ? "Checking pending registrations..." : "No pending vehicle applications to review! 🎉"}
+                  <td
+                    colSpan={7}
+                    style={{
+                      textAlign: "center",
+                      padding: "40px",
+                      color: "var(--text-dim)",
+                    }}
+                  >
+                    {loading
+                      ? "Checking pending registrations..."
+                      : "No pending vehicle applications to review! 🎉"}
                   </td>
                 </tr>
               ) : (
@@ -177,27 +238,67 @@ export const ApprovalsView: React.FC = () => {
                   const isProcessing = processingId === v.id;
                   return (
                     <tr key={v.id}>
-                      <td className="mono-text" style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                      <td
+                        className="mono-text"
+                        style={{
+                          fontSize: "0.8rem",
+                          color: "var(--text-muted)",
+                        }}
+                      >
                         {new Date(v.createdAt).toLocaleDateString()}
                       </td>
                       <td>
                         <span className="plate-pill">{v.plateNumber}</span>
                       </td>
                       <td>
-                        <div style={{ fontWeight: 600, color: "var(--text-main)" }}>{v.ownerName}</div>
-                        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{v.ownerContact}</div>
+                        <div
+                          style={{ fontWeight: 600, color: "var(--text-main)" }}
+                        >
+                          {v.ownerName}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "0.75rem",
+                            color: "var(--text-muted)",
+                          }}
+                        >
+                          {v.ownerContact}
+                        </div>
                       </td>
                       <td>
-                        <span className="badge badge-info" style={{ textTransform: "capitalize" }}>
+                        <span
+                          className="badge badge-info"
+                          style={{ textTransform: "capitalize" }}
+                        >
                           {v.category}
                         </span>
                       </td>
-                      <td style={{ fontSize: "0.85rem", color: "var(--text-main)" }}>
-                        <div>{v.make || "—"} {v.model || ""}</div>
-                        <div style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>{v.color || "Color not specified"}</div>
+                      <td
+                        style={{
+                          fontSize: "0.85rem",
+                          color: "var(--text-main)",
+                        }}
+                      >
+                        <div>
+                          {v.make || "—"} {v.model || ""}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "0.75rem",
+                            color: "var(--text-dim)",
+                          }}
+                        >
+                          {v.color || "Color not specified"}
+                        </div>
                       </td>
                       <td>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                          }}
+                        >
                           <FileText size={15} color="#3b82f6" />
                           <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>
                             {v.documents?.length || 0} file(s)
@@ -205,7 +306,13 @@ export const ApprovalsView: React.FC = () => {
                         </div>
                       </td>
                       <td>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
                           <button
                             onClick={() => setSelectedVehicle(v)}
                             className="btn btn-secondary btn-sm"
@@ -251,77 +358,174 @@ export const ApprovalsView: React.FC = () => {
       {/* Inspect Application Modal */}
       {selectedVehicle && (
         <div className="modal-overlay" onClick={() => setSelectedVehicle(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "600px" }}>
-            <div style={{
-              padding: "20px 24px",
-              borderBottom: "1px solid var(--border-subtle)",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center"
-            }}>
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: "600px" }}
+          >
+            <div
+              style={{
+                padding: "20px 24px",
+                borderBottom: "1px solid var(--border-subtle)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
               <div>
                 <h3 style={{ margin: 0, fontSize: "1.1rem" }}>
                   Registration Dossier: {selectedVehicle.plateNumber}
                 </h3>
-                <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                  Submitted on {new Date(selectedVehicle.createdAt).toLocaleString()}
+                <span
+                  style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}
+                >
+                  Submitted on{" "}
+                  {new Date(selectedVehicle.createdAt).toLocaleString()}
                 </span>
               </div>
               <button
                 onClick={() => setSelectedVehicle(null)}
-                style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer" }}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "var(--text-muted)",
+                  cursor: "pointer",
+                }}
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div
+              style={{
+                padding: "24px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "20px",
+              }}
+            >
               {/* Applicant & Vehicle Cards */}
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "16px",
-                padding: "16px",
-                borderRadius: "10px",
-                background: "var(--bg-elevated)",
-                border: "1px solid var(--border-subtle)"
-              }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "16px",
+                  padding: "16px",
+                  borderRadius: "10px",
+                  background: "var(--bg-elevated)",
+                  border: "1px solid var(--border-subtle)",
+                }}
+              >
                 <div>
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase" }}>Full Name</div>
-                  <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-main)", marginTop: "2px" }}>
+                  <div
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "var(--text-muted)",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Full Name
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.95rem",
+                      fontWeight: 700,
+                      color: "var(--text-main)",
+                      marginTop: "2px",
+                    }}
+                  >
                     {selectedVehicle.ownerName}
                   </div>
                 </div>
 
                 <div>
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase" }}>Category</div>
-                  <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--primary)", marginTop: "2px", textTransform: "capitalize" }}>
+                  <div
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "var(--text-muted)",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Category
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.95rem",
+                      fontWeight: 700,
+                      color: "var(--primary)",
+                      marginTop: "2px",
+                      textTransform: "capitalize",
+                    }}
+                  >
                     {selectedVehicle.category}
                   </div>
                 </div>
 
                 <div>
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase" }}>Contact / Phone</div>
-                  <div style={{ fontSize: "0.9rem", color: "var(--text-main)", marginTop: "2px" }}>
+                  <div
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "var(--text-muted)",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Contact / Phone
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.9rem",
+                      color: "var(--text-main)",
+                      marginTop: "2px",
+                    }}
+                  >
                     {selectedVehicle.ownerContact}
                   </div>
                 </div>
 
                 <div>
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase" }}>Vehicle Make & Model</div>
-                  <div style={{ fontSize: "0.9rem", color: "var(--text-main)", marginTop: "2px" }}>
-                    {selectedVehicle.make || "—"} {selectedVehicle.model || ""} ({selectedVehicle.color || "N/A"})
+                  <div
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "var(--text-muted)",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Vehicle Make & Model
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.9rem",
+                      color: "var(--text-main)",
+                      marginTop: "2px",
+                    }}
+                  >
+                    {selectedVehicle.make || "—"} {selectedVehicle.model || ""}{" "}
+                    ({selectedVehicle.color || "N/A"})
                   </div>
                 </div>
               </div>
 
               {/* Supporting Documents */}
               <div>
-                <h4 style={{ fontSize: "0.875rem", marginBottom: "10px", color: "var(--text-muted)", textTransform: "uppercase" }}>
+                <h4
+                  style={{
+                    fontSize: "0.875rem",
+                    marginBottom: "10px",
+                    color: "var(--text-muted)",
+                    textTransform: "uppercase",
+                  }}
+                >
                   Attached Verification Documents
                 </h4>
-                {selectedVehicle.documents && selectedVehicle.documents.length > 0 ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {selectedVehicle.documents &&
+                selectedVehicle.documents.length > 0 ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "8px",
+                    }}
+                  >
                     {selectedVehicle.documents.map((doc) => (
                       <div
                         key={doc.id}
@@ -332,17 +536,35 @@ export const ApprovalsView: React.FC = () => {
                           padding: "12px 16px",
                           borderRadius: "8px",
                           background: "var(--bg-input)",
-                          border: "1px solid var(--border-subtle)"
+                          border: "1px solid var(--border-subtle)",
                         }}
                       >
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "10px",
+                          }}
+                        >
                           <FileText size={18} color="var(--primary)" />
                           <div>
-                            <div style={{ fontSize: "0.85rem", fontWeight: 600, textTransform: "capitalize" }}>
+                            <div
+                              style={{
+                                fontSize: "0.85rem",
+                                fontWeight: 600,
+                                textTransform: "capitalize",
+                              }}
+                            >
                               {doc.type.replace(/_/g, " ")}
                             </div>
-                            <div style={{ fontSize: "0.7rem", color: "var(--text-dim)" }}>
-                              Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}
+                            <div
+                              style={{
+                                fontSize: "0.7rem",
+                                color: "var(--text-dim)",
+                              }}
+                            >
+                              Uploaded:{" "}
+                              {new Date(doc.uploadedAt).toLocaleDateString()}
                             </div>
                           </div>
                         </div>
@@ -361,28 +583,32 @@ export const ApprovalsView: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div style={{
-                    padding: "14px",
-                    borderRadius: "8px",
-                    background: "rgba(255, 255, 255, 0.02)",
-                    border: "1px dashed var(--border-subtle)",
-                    fontSize: "0.8rem",
-                    color: "var(--text-dim)",
-                    textAlign: "center"
-                  }}>
+                  <div
+                    style={{
+                      padding: "14px",
+                      borderRadius: "8px",
+                      background: "rgba(255, 255, 255, 0.02)",
+                      border: "1px dashed var(--border-subtle)",
+                      fontSize: "0.8rem",
+                      color: "var(--text-dim)",
+                      textAlign: "center",
+                    }}
+                  >
                     No external documents attached to this application.
                   </div>
                 )}
               </div>
             </div>
 
-            <div style={{
-              padding: "16px 24px",
-              borderTop: "1px solid var(--border-subtle)",
-              display: "flex",
-              justifyContent: "flex-end",
-              gap: "10px"
-            }}>
+            <div
+              style={{
+                padding: "16px 24px",
+                borderTop: "1px solid var(--border-subtle)",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "10px",
+              }}
+            >
               <button
                 onClick={() => {
                   setRejectingVehicle(selectedVehicle);
@@ -406,19 +632,45 @@ export const ApprovalsView: React.FC = () => {
 
       {/* Rejection Modal with Note Input */}
       {rejectingVehicle && (
-        <div className="modal-overlay" onClick={() => setRejectingVehicle(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "450px" }}>
-            <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-subtle)" }}>
+        <div
+          className="modal-overlay"
+          onClick={() => setRejectingVehicle(null)}
+        >
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: "450px" }}
+          >
+            <div
+              style={{
+                padding: "20px 24px",
+                borderBottom: "1px solid var(--border-subtle)",
+              }}
+            >
               <h3 style={{ margin: 0, fontSize: "1.1rem", color: "#f87171" }}>
                 Reject Vehicle Registration
               </h3>
-              <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "4px" }}>
-                Vehicle: <strong>{rejectingVehicle.plateNumber}</strong> ({rejectingVehicle.ownerName})
+              <p
+                style={{
+                  fontSize: "0.8rem",
+                  color: "var(--text-muted)",
+                  marginTop: "4px",
+                }}
+              >
+                Vehicle: <strong>{rejectingVehicle.plateNumber}</strong> (
+                {rejectingVehicle.ownerName})
               </p>
             </div>
 
             <div style={{ padding: "24px" }}>
-              <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "8px" }}>
+              <label
+                style={{
+                  fontSize: "0.8rem",
+                  color: "var(--text-muted)",
+                  display: "block",
+                  marginBottom: "8px",
+                }}
+              >
                 Reason for Rejection (visible to applicant):
               </label>
               <textarea
@@ -430,17 +682,25 @@ export const ApprovalsView: React.FC = () => {
               />
             </div>
 
-            <div style={{
-              padding: "16px 24px",
-              borderTop: "1px solid var(--border-subtle)",
-              display: "flex",
-              justifyContent: "flex-end",
-              gap: "10px"
-            }}>
-              <button onClick={() => setRejectingVehicle(null)} className="btn btn-secondary btn-sm">
+            <div
+              style={{
+                padding: "16px 24px",
+                borderTop: "1px solid var(--border-subtle)",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "10px",
+              }}
+            >
+              <button
+                onClick={() => setRejectingVehicle(null)}
+                className="btn btn-secondary btn-sm"
+              >
                 Cancel
               </button>
-              <button onClick={handleConfirmReject} className="btn btn-danger btn-sm">
+              <button
+                onClick={handleConfirmReject}
+                className="btn btn-danger btn-sm"
+              >
                 Confirm Rejection
               </button>
             </div>

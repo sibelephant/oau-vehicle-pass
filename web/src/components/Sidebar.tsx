@@ -1,12 +1,11 @@
 import React from "react";
-import { 
-  LayoutDashboard, 
-  ShieldAlert, 
-  Car, 
-  Ban, 
-  LogOut, 
+import {
+  LayoutDashboard,
+  Car,
+  Ban,
+  LogOut,
   ShieldCheck,
-  Radio
+  Radio,
 } from "lucide-react";
 import type { SessionUser } from "../lib/auth-client";
 
@@ -54,47 +53,73 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside style={{
-      width: "280px",
-      minWidth: "280px",
-      background: "linear-gradient(180deg, #0e1524 0%, #0a0e17 100%)",
-      borderRight: "1px solid var(--border-subtle)",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-between",
-      height: "100vh",
-      position: "sticky",
-      top: 0,
-      zIndex: 20,
-    }}>
+    <aside
+      style={{
+        width: "280px",
+        minWidth: "280px",
+        background: "linear-gradient(180deg, #0e1524 0%, #0a0e17 100%)",
+        borderRight: "1px solid var(--border-subtle)",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        height: "100vh",
+        position: "sticky",
+        top: 0,
+        zIndex: 20,
+      }}
+    >
       {/* Top Branding */}
       <div>
-        <div style={{
-          padding: "24px 20px 20px",
-          borderBottom: "1px solid var(--border-subtle)",
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-        }}>
-          <div style={{
-            width: "42px",
-            height: "42px",
-            borderRadius: "10px",
-            background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+        <div
+          style={{
+            padding: "24px 20px 20px",
+            borderBottom: "1px solid var(--border-subtle)",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
-            boxShadow: "0 0 20px rgba(37, 99, 235, 0.4)",
-          }}>
+            gap: "12px",
+          }}
+        >
+          <div
+            style={{
+              width: "42px",
+              height: "42px",
+              borderRadius: "10px",
+              background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 0 20px rgba(37, 99, 235, 0.4)",
+            }}
+          >
             <ShieldCheck size={24} color="#ffffff" />
           </div>
           <div>
-            <h2 style={{ fontSize: "1.05rem", fontWeight: 700, margin: 0, letterSpacing: "-0.01em" }}>
+            <h2
+              style={{
+                fontSize: "1.05rem",
+                fontWeight: 700,
+                margin: 0,
+                letterSpacing: "-0.01em",
+              }}
+            >
               OAU Campus Pass
             </h2>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                marginTop: "2px",
+              }}
+            >
               <span className="pulse-indicator" />
-              <span style={{ fontSize: "0.725rem", color: "var(--accent-cyan)", fontWeight: 600 }}>
+              <span
+                style={{
+                  fontSize: "0.725rem",
+                  color: "var(--accent-cyan)",
+                  fontWeight: 600,
+                }}
+              >
                 SECURITY COMMAND
               </span>
             </div>
@@ -102,15 +127,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Navigation Items */}
-        <nav style={{ padding: "16px 12px", display: "flex", flexDirection: "column", gap: "4px" }}>
-          <div style={{
-            padding: "8px 12px 6px",
-            fontSize: "0.7rem",
-            textTransform: "uppercase",
-            fontWeight: 700,
-            letterSpacing: "0.08em",
-            color: "var(--text-dim)",
-          }}>
+        <nav
+          style={{
+            padding: "16px 12px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "4px",
+          }}
+        >
+          <div
+            style={{
+              padding: "8px 12px 6px",
+              fontSize: "0.7rem",
+              textTransform: "uppercase",
+              fontWeight: 700,
+              letterSpacing: "0.08em",
+              color: "var(--text-dim)",
+            }}
+          >
             Main Menu
           </div>
 
@@ -128,8 +162,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   padding: "10px 14px",
                   borderRadius: "8px",
                   border: "none",
-                  background: isActive 
-                    ? "linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%)" 
+                  background: isActive
+                    ? "linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%)"
                     : "transparent",
                   color: isActive ? "#60a5fa" : "var(--text-muted)",
                   fontWeight: isActive ? 600 : 500,
@@ -137,11 +171,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   cursor: "pointer",
                   transition: "all var(--transition-fast)",
                   outline: "none",
-                  borderLeft: isActive ? "3px solid var(--primary)" : "3px solid transparent",
+                  borderLeft: isActive
+                    ? "3px solid var(--primary)"
+                    : "3px solid transparent",
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)";
+                    e.currentTarget.style.background =
+                      "rgba(255, 255, 255, 0.04)";
                     e.currentTarget.style.color = "var(--text-main)";
                   }
                 }}
@@ -152,27 +189,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   }
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <Icon size={18} color={isActive ? "#60a5fa" : "currentColor"} />
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "12px" }}
+                >
+                  <Icon
+                    size={18}
+                    color={isActive ? "#60a5fa" : "currentColor"}
+                  />
                   <span>{item.label}</span>
                 </div>
 
                 {item.badge && (
-                  <span className={`badge badge-${item.badgeColor}`} style={{ padding: "2px 6px", fontSize: "0.65rem" }}>
+                  <span
+                    className={`badge badge-${item.badgeColor}`}
+                    style={{ padding: "2px 6px", fontSize: "0.65rem" }}
+                  >
                     {item.badge}
                   </span>
                 )}
 
                 {typeof item.count === "number" && item.count > 0 && (
-                  <span style={{
-                    background: "rgba(245, 158, 11, 0.2)",
-                    color: "#fbbf24",
-                    border: "1px solid rgba(245, 158, 11, 0.4)",
-                    padding: "2px 7px",
-                    borderRadius: "10px",
-                    fontSize: "0.75rem",
-                    fontWeight: 700,
-                  }}>
+                  <span
+                    style={{
+                      background: "rgba(245, 158, 11, 0.2)",
+                      color: "#fbbf24",
+                      border: "1px solid rgba(245, 158, 11, 0.4)",
+                      padding: "2px 7px",
+                      borderRadius: "10px",
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                    }}
+                  >
                     {item.count}
                   </span>
                 )}
@@ -183,47 +230,57 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* User Section & Logout */}
-      <div style={{
-        padding: "16px",
-        borderTop: "1px solid var(--border-subtle)",
-        background: "rgba(10, 14, 23, 0.8)",
-      }}>
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          marginBottom: "12px",
-        }}>
-          <div style={{
-            width: "36px",
-            height: "36px",
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, #8b5cf6, #3b82f6)",
+      <div
+        style={{
+          padding: "16px",
+          borderTop: "1px solid var(--border-subtle)",
+          background: "rgba(10, 14, 23, 0.8)",
+        }}
+      >
+        <div
+          style={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
-            fontWeight: 700,
-            fontSize: "0.85rem",
-            color: "#ffffff",
-          }}>
+            gap: "10px",
+            marginBottom: "12px",
+          }}
+        >
+          <div
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #8b5cf6, #3b82f6)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 700,
+              fontSize: "0.85rem",
+              color: "#ffffff",
+            }}
+          >
             {user?.name ? user.name.slice(0, 2).toUpperCase() : "AD"}
           </div>
           <div style={{ overflow: "hidden", flex: 1 }}>
-            <div style={{
-              fontSize: "0.85rem",
-              fontWeight: 600,
-              color: "var(--text-main)",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}>
+            <div
+              style={{
+                fontSize: "0.85rem",
+                fontWeight: 600,
+                color: "var(--text-main)",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
               {user?.name || "Security Officer"}
             </div>
-            <div style={{
-              fontSize: "0.725rem",
-              color: "var(--text-muted)",
-              textTransform: "capitalize",
-            }}>
+            <div
+              style={{
+                fontSize: "0.725rem",
+                color: "var(--text-muted)",
+                textTransform: "capitalize",
+              }}
+            >
               {user?.role?.replace("_", " ") || "Admin"}
             </div>
           </div>
