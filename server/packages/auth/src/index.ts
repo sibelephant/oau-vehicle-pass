@@ -14,15 +14,25 @@ export function createAuth(
   database: Database,
   desktopOrigins: readonly string[] = [],
 ) {
+  const secret = env?.BETTER_AUTH_SECRET || process.env.BETTER_AUTH_SECRET;
+  const baseURL = env?.BETTER_AUTH_URL || process.env.BETTER_AUTH_URL;
+  const corsOrigin = env?.CORS_ORIGIN || process.env.CORS_ORIGIN || "";
+
+  if (!secret) {
+    throw new Error(
+      "BETTER_AUTH_SECRET is not set! Please define BETTER_AUTH_SECRET in your environment variables."
+    );
+  }
+
   return betterAuth({
     database: drizzleAdapter(database, {
       provider: "pg",
       schema,
     }),
-    trustedOrigins: [env.CORS_ORIGIN, ...desktopOrigins],
+    trustedOrigins: [corsOrigin, ...desktopOrigins].filter(Boolean),
     emailAndPassword: { enabled: true },
-    secret: env.BETTER_AUTH_SECRET,
-    baseURL: env.BETTER_AUTH_URL,
+    secret,
+    baseURL: baseURL || "http://localhost:3000",
     advanced: {
       defaultCookieAttributes: {
         sameSite: "none",
