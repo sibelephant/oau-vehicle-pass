@@ -1,0 +1,3 @@
+{
+  "extends": "@oau-vehicle-pass/config/tsconfig.base.json"
+}

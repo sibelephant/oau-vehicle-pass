@@ -1,0 +1,22 @@
+{
+  "name": "@oau-vehicle-pass/auth",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@better-auth/drizzle-adapter": "1.7.5",
+    "@oau-vehicle-pass/db": "*",
+    "better-auth": "1.7.5",
+    "drizzle-orm": "1.0.0-rc.4",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@oau-vehicle-pass/config": "*",
+    "typescript": "^6.0.3"
+  }
+}
