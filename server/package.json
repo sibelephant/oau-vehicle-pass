@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
+    "start": "node apps/server/dist/index.mjs",
     "check-types": "turbo run check-types",
     "dev:server": "turbo run dev -F server --",
     "db:push": "turbo run db:push -F @oau-vehicle-pass/db --",
@@ -20,12 +21,12 @@
     "auth:generate": "cd apps/server && npm run auth:generate"
   },
   "dependencies": {
+    "turbo": "^2.10.12",
     "zod": "^4.5.4"
   },
   "devDependencies": {
     "@oau-vehicle-pass/config": "*",
     "@types/node": "^26.4.1",
-    "turbo": "^2.10.12",
     "typescript": "^6.0.3",
     "varlock": "1.18.0"
   },

@@ -1,0 +1,13 @@
+{
+  "name": "oau-vehicle-pass",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OAU Vehicle Pass Authentication System (Mobile App, Express Backend, React Admin Dashboard)",
+  "scripts": {
+    "dev:web": "npm run dev --prefix web",
+    "dev:server": "npm run dev --prefix server",
+    "dev:mobile": "npm run start --prefix mobile",
+    "build:web": "npm run build --prefix web",
+    "build:server": "npm run build --prefix server"
+  }
+}

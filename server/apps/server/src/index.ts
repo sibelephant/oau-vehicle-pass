@@ -36,6 +36,8 @@ app.get("/", (_req, res) => {
   res.status(200).json({ status: "OK", service: "OAU Vehicle Pass API" });
 });
 
-app.listen(3000, () => {
-  console.log("Server is running on http://localhost:3000");
+const port = process.env.PORT ? Number(process.env.PORT) : 3000;
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
