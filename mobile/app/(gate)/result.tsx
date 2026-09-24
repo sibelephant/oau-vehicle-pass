@@ -1,4 +1,5 @@
 import { gateApi, type Vehicle } from "@/lib/api";
+import { offlineGate } from "@/lib/offline-gate";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -17,10 +18,12 @@ export default function GateResultScreen() {
     decision: string;
     reason: string;
     vehicleJson: string;
+    isOffline?: string;
   }>();
 
   const decision = params.decision as "granted" | "denied";
   const reason = params.reason;
+  const isOffline = params.isOffline === "true";
   const vehicle: Vehicle | null = params.vehicleJson
     ? JSON.parse(params.vehicleJson)
     : null;
@@ -56,8 +59,20 @@ export default function GateResultScreen() {
         `Decision changed to: ${overrideDecision.toUpperCase()}`,
         [{ text: "OK", onPress: () => router.replace("/(gate)/" as never) }],
       );
-    } catch (e: any) {
-      Alert.alert("Error", e?.message ?? "Could not log override");
+    } catch {
+      // If server unreachable, queue override locally
+      await offlineGate.queueLog({
+        vehicleId: vehicle?.id,
+        plateNumber: vehicle?.plateNumber,
+        channel: "manual",
+        decision: overrideDecision,
+        overrideReason: `[Offline Override] ${overrideReason.trim()}`,
+      });
+      Alert.alert(
+        "Saved Offline",
+        `Decision recorded locally as ${overrideDecision.toUpperCase()}. It will automatically sync to the server when reconnected.`,
+        [{ text: "OK", onPress: () => router.replace("/(gate)/" as never) }],
+      );
     } finally {
       setSubmitting(false);
     }
@@ -74,6 +89,13 @@ export default function GateResultScreen() {
           isGranted ? "bg-emerald-900" : "bg-red-950"
         }`}
       >
+        {isOffline && (
+          <View className="bg-amber-950/80 border border-amber-500/50 rounded-full px-4 py-1.5 flex-row items-center gap-1.5 mb-3">
+            <Text className="text-amber-400 text-xs font-bold">
+              ⚡ OFFLINE LOCAL CACHE VERIFICATION
+            </Text>
+          </View>
+        )}
         <Text style={{ fontSize: 80 }}>{isGranted ? "✅" : "🚫"}</Text>
         <Text
           className={`text-5xl font-black mt-4 tracking-wide ${

@@ -1,5 +1,5 @@
 import { useAuth } from "@/app/_layout";
-import { vehiclesApi, type Vehicle, reportsApi } from "@/lib/api";
+import { vehiclesApi, type Vehicle } from "@/lib/api";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {

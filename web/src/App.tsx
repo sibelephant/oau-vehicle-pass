@@ -6,6 +6,7 @@ import { OverviewView } from "./views/OverviewView";
 import { GateFeedView } from "./views/GateFeedView";
 import { ApprovalsView } from "./views/ApprovalsView";
 import { BlacklistView } from "./views/BlacklistView";
+import { ReportsView } from "./views/ReportsView";
 import { LoginView } from "./views/LoginView";
 import "./index.css";
 
@@ -19,6 +20,7 @@ export const App: React.FC = () => {
       <Route element={<ProtectedRoute />}>
         <Route element={<DashboardLayout />}>
           <Route index element={<OverviewView />} />
+          <Route path="reports" element={<ReportsView />} />
           <Route path="gate-feed" element={<GateFeedView />} />
           <Route path="approvals" element={<ApprovalsView />} />
           <Route path="blacklist" element={<BlacklistView />} />

@@ -44,6 +44,11 @@ export const DashboardLayout: React.FC = () => {
           title: "Security Blacklist Registry",
           subtitle: "Barred plates and restricted campus entry alerts",
         };
+      case "/reports":
+        return {
+          title: "Access Reports & Security Analytics",
+          subtitle: "Peak-hour distributions, channel audits, unauthorized attempt analysis, and data exports",
+        };
       case "/":
       case "/overview":
       default:

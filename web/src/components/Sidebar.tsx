@@ -7,10 +7,11 @@ import {
   LogOut,
   ShieldCheck,
   Radio,
+  BarChart3,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
-export type NavTab = "overview" | "gate-feed" | "approvals" | "blacklist";
+export type NavTab = "overview" | "gate-feed" | "approvals" | "blacklist" | "reports";
 
 interface SidebarProps {
   pendingApprovalsCount?: number;
@@ -28,6 +29,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       end: true,
       label: "Overview & Analytics",
       icon: LayoutDashboard,
+    },
+    {
+      to: "/reports",
+      label: "Reports & Audits",
+      icon: BarChart3,
     },
     {
       to: "/gate-feed",

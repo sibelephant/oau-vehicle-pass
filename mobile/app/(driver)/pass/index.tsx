@@ -9,14 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
-
-// QR code library — imported dynamically so the screen still renders if not yet installed
-let QRCode: any = null;
-try {
-  QRCode = require("react-native-qrcode-svg").default;
-} catch {
-  // not installed yet — show placeholder
-}
+import QRCode from "react-native-qrcode-svg";
 
 function PassCountdown({ expiresAt }: { expiresAt: string }) {
   const exp = new Date(expiresAt);

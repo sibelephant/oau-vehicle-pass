@@ -48,6 +48,8 @@ async function request<T>(path: string, options: ApiOptions = {}): Promise<T> {
           const rawToken = decodeURIComponent(match[1]);
           const sessionToken = rawToken.split(".")[0];
           headers["Authorization"] = `Bearer ${sessionToken}`;
+        } else if (typeof cookie === "string" && !cookie.includes("=")) {
+          headers["Authorization"] = `Bearer ${cookie.split(".")[0]}`;
         }
       }
     }
@@ -163,6 +165,16 @@ export interface GateDecision {
   decision: "granted" | "denied";
   reason?: string;
   vehicle?: Vehicle | null;
+  plateNumber?: string;
+}
+
+export interface AnprRecognitionResult {
+  detectedPlate: string | null;
+  confidence: number;
+  rawText: string;
+  vehicle: Vehicle | null;
+  decision: "granted" | "denied";
+  reason?: string;
 }
 
 export const gateApi = {
@@ -172,10 +184,20 @@ export const gateApi = {
       body: { token },
     }),
 
-  scanPlate: (plateNumber: string, plateImageUrl?: string) =>
+  scanPlate: (
+    plateNumber?: string,
+    plateImageBase64?: string,
+    plateImageUrl?: string,
+  ) =>
     request<GateDecision>("/api/gate/scan-plate", {
       method: "POST",
-      body: { plateNumber, plateImageUrl },
+      body: { plateNumber, plateImageBase64, plateImageUrl },
+    }),
+
+  recognizeAnpr: (imageBase64: string) =>
+    request<AnprRecognitionResult>("/api/gate/anpr", {
+      method: "POST",
+      body: { imageBase64 },
     }),
 
   override: (data: {
@@ -187,6 +209,19 @@ export const gateApi = {
     request<AccessLog>("/api/gate/override", { method: "POST", body: data }),
 
   todayLog: () => request<AccessLog[]>("/api/gate/today"),
+
+  getSyncSnapshot: () =>
+    request<{
+      syncTimestamp: string;
+      whitelist: any[];
+      blacklist: any[];
+    }>("/api/gate/sync"),
+
+  syncOfflineLogs: (logs: any[]) =>
+    request<{ syncedCount: number }>("/api/gate/sync-logs", {
+      method: "POST",
+      body: { logs },
+    }),
 };
 
 // ─── Reports ──────────────────────────────────────────────────────────────────

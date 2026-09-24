@@ -72,7 +72,7 @@ export function createAuth(
           type: "string",
           required: false,
           defaultValue: "driver",
-          input: true, // allow setting role on sign-up
+          input: false, // disallow arbitrary role assignment on public sign-up
         },
       },
     },

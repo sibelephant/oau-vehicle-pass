@@ -1,4 +1,4 @@
-import { authClient, type UserRole } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 import { useAuth } from "@/app/_layout";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -11,24 +11,8 @@ import {
   ScrollView,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
-
-const ROLES: { value: UserRole; label: string; description: string; emoji: string }[] = [
-  {
-    value: "driver",
-    label: "Vehicle Owner",
-    description: "Register vehicles and manage your passes",
-    emoji: "🚗",
-  },
-  {
-    value: "gate_officer",
-    label: "Gate Officer",
-    description: "Verify vehicles at the campus gate",
-    emoji: "🛡️",
-  },
-];
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -36,7 +20,6 @@ export default function RegisterScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<UserRole>("driver");
   const [loading, setLoading] = useState(false);
 
   async function handleRegister() {
@@ -54,8 +37,7 @@ export default function RegisterScreen() {
         name: name.trim(),
         email: email.trim(),
         password,
-        role,
-      } as any);
+      });
 
       if (result.error) {
         Alert.alert("Registration Failed", result.error.message ?? "Could not create account");
@@ -63,12 +45,7 @@ export default function RegisterScreen() {
       }
 
       await refetch();
-
-      if (role === "gate_officer" || role === "admin") {
-        router.replace("/(gate)/" as never);
-      } else {
-        router.replace("/(driver)/" as never);
-      }
+      router.replace("/(driver)/" as never);
     } catch (e: any) {
       Alert.alert("Error", e?.message ?? "Something went wrong");
     } finally {
@@ -97,35 +74,9 @@ export default function RegisterScreen() {
           <Text className="text-amber-200/80 text-base mt-1">
             Join the OAU Vehicle Pass system
           </Text>
-        </View>
-
-        {/* Role selector */}
-        <View className="mb-6">
-          <Text className="text-gray-300 text-sm font-medium mb-3">
-            I am a...
-          </Text>
-          <View className="flex-row gap-3">
-            {ROLES.map((r) => (
-              <TouchableOpacity
-                key={r.value}
-                onPress={() => setRole(r.value)}
-                className={`flex-1 rounded-2xl p-4 border-2 ${
-                  role === r.value
-                    ? "bg-[#002147] border-[#d4af37]"
-                    : "bg-[#001d40] border-[#0d3366]"
-                }`}
-              >
-                <Text className="text-2xl mb-1">{r.emoji}</Text>
-                <Text
-                  className={`font-bold text-sm ${role === r.value ? "text-[#f5c542]" : "text-white"}`}
-                >
-                  {r.label}
-                </Text>
-                <Text className="text-gray-400 text-xs mt-0.5">
-                  {r.description}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <View className="mt-3 px-3 py-1.5 rounded-full bg-[#001d40] border border-[#0d3366] flex-row items-center gap-1.5">
+            <Text className="text-xs">🚗</Text>
+            <Text className="text-xs text-gray-300">Vehicle Owner Registration</Text>
           </View>
         </View>
 
@@ -204,6 +155,13 @@ export default function RegisterScreen() {
             <Text className="text-[#f5c542] font-semibold">Sign In</Text>
           </Text>
         </Pressable>
+
+        {/* Gate officer note */}
+        <View className="mt-4 px-4 items-center">
+          <Text className="text-gray-500 text-xs text-center">
+            Gate officer accounts are assigned by Campus Security Administration.
+          </Text>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );

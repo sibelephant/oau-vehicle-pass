@@ -42,6 +42,11 @@ router.get("/access-log", adminOrOfficer, async (req, res) => {
     );
   }
 
+  const [{ total = 0 } = {}] = await db
+    .select({ total: sql<number>`COUNT(*)::int` })
+    .from(accessLog)
+    .where(conditions.length > 0 ? and(...conditions) : undefined);
+
   // Use select() API which fully supports arbitrary where conditions
   const logs = await db
     .select({
@@ -57,7 +62,7 @@ router.get("/access-log", adminOrOfficer, async (req, res) => {
     .limit(limit)
     .offset(offset);
 
-  res.json({ data: logs, page, limit });
+  res.json({ data: logs, total, page, limit });
 });
 
 // ─── Peak Hours ───────────────────────────────────────────────────────────────
@@ -66,7 +71,7 @@ router.get("/access-log", adminOrOfficer, async (req, res) => {
  * GET /api/reports/peak-hours?from=ISO&to=ISO
  * Returns hourly access counts for charting.
  */
-router.get("/peak-hours", requireRole("admin"), async (req, res) => {
+router.get("/peak-hours", adminOrOfficer, async (req, res) => {
   const conditions = [];
   if (req.query.from) {
     conditions.push(
@@ -91,6 +96,75 @@ router.get("/peak-hours", requireRole("admin"), async (req, res) => {
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .groupBy(sql`EXTRACT(HOUR FROM ${accessLog.timestamp})`)
     .orderBy(sql`EXTRACT(HOUR FROM ${accessLog.timestamp})`);
+
+  res.json(rows);
+});
+
+// ─── Daily Trends ─────────────────────────────────────────────────────────────
+
+/**
+ * GET /api/reports/daily-trends?from=ISO&to=ISO
+ * Returns day-by-day access counts for trending analysis.
+ */
+router.get("/daily-trends", adminOrOfficer, async (req, res) => {
+  const conditions = [];
+  if (req.query.from) {
+    conditions.push(
+      gte(accessLog.timestamp, new Date(req.query.from as string)),
+    );
+  }
+  if (req.query.to) {
+    conditions.push(lte(accessLog.timestamp, new Date(req.query.to as string)));
+  }
+
+  const rows = await db
+    .select({
+      date: sql<string>`TO_CHAR(${accessLog.timestamp}, 'YYYY-MM-DD')`,
+      total: sql<number>`COUNT(*)::int`,
+      granted: sql<number>`SUM(CASE WHEN ${accessLog.decision} = 'granted' THEN 1 ELSE 0 END)::int`,
+      denied: sql<number>`SUM(CASE WHEN ${accessLog.decision} = 'denied' THEN 1 ELSE 0 END)::int`,
+      qr: sql<number>`SUM(CASE WHEN ${accessLog.channel} = 'qr' THEN 1 ELSE 0 END)::int`,
+      anpr: sql<number>`SUM(CASE WHEN ${accessLog.channel} = 'anpr' THEN 1 ELSE 0 END)::int`,
+      manual: sql<number>`SUM(CASE WHEN ${accessLog.channel} = 'manual' THEN 1 ELSE 0 END)::int`,
+    })
+    .from(accessLog)
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .groupBy(sql`TO_CHAR(${accessLog.timestamp}, 'YYYY-MM-DD')`)
+    .orderBy(sql`TO_CHAR(${accessLog.timestamp}, 'YYYY-MM-DD') ASC`);
+
+  res.json(rows);
+});
+
+// ─── Unauthorized Attempts Audit ──────────────────────────────────────────────
+
+/**
+ * GET /api/reports/unauthorized?from=ISO&to=ISO
+ * Returns distribution of security rejections / unauthorized attempts.
+ */
+router.get("/unauthorized", adminOrOfficer, async (req, res) => {
+  const conditions = [eq(accessLog.decision, "denied")];
+  if (req.query.from) {
+    conditions.push(
+      gte(accessLog.timestamp, new Date(req.query.from as string)),
+    );
+  }
+  if (req.query.to) {
+    conditions.push(lte(accessLog.timestamp, new Date(req.query.to as string)));
+  }
+
+  const rows = await db
+    .select({
+      reason: sql<string>`COALESCE(${accessLog.overrideReason}, 'Unspecified denial')`,
+      channel: accessLog.channel,
+      count: sql<number>`COUNT(*)::int`,
+    })
+    .from(accessLog)
+    .where(and(...conditions))
+    .groupBy(
+      sql`COALESCE(${accessLog.overrideReason}, 'Unspecified denial')`,
+      accessLog.channel,
+    )
+    .orderBy(sql`COUNT(*) DESC`);
 
   res.json(rows);
 });

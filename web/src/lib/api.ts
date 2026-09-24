@@ -64,6 +64,28 @@ export interface VehicleItem {
 export interface PeakHourItem {
   hour: number;
   count: number;
+  total?: number;
+  granted?: number;
+  denied?: number;
+  qr?: number;
+  anpr?: number;
+  manual?: number;
+}
+
+export interface DailyTrendItem {
+  date: string;
+  total: number;
+  granted: number;
+  denied: number;
+  qr: number;
+  anpr: number;
+  manual: number;
+}
+
+export interface UnauthorizedStatItem {
+  reason: string;
+  channel: "qr" | "anpr" | "manual";
+  count: number;
 }
 
 export interface TrafficSummary {
@@ -135,20 +157,52 @@ export const api = {
     if (params.decision) query.set("decision", params.decision);
     if (params.channel) query.set("channel", params.channel);
 
-    return request<{ data: AccessLogItem[]; page: number; limit: number }>(
-      `/api/reports/access-log?${query.toString()}`,
-    );
+    return request<{
+      data: AccessLogItem[];
+      total?: number;
+      page: number;
+      limit: number;
+    }>(`/api/reports/access-log?${query.toString()}`);
   },
 
   getPeakHours: (from?: string, to?: string) => {
     const query = new URLSearchParams();
     if (from) query.set("from", from);
     if (to) query.set("to", to);
-    return request<Array<{ hour: number; total: number }>>(
-      `/api/reports/peak-hours?${query.toString()}`,
-    ).then((rows) => ({
-      data: rows.map((row) => ({ hour: row.hour, count: row.total })),
+    return request<
+      Array<{
+        hour: number;
+        total: number;
+        granted?: number;
+        denied?: number;
+        qr?: number;
+        anpr?: number;
+        manual?: number;
+      }>
+    >(`/api/reports/peak-hours?${query.toString()}`).then((rows) => ({
+      data: rows.map((row) => ({
+        ...row,
+        count: row.total,
+      })),
     }));
+  },
+
+  getDailyTrends: (from?: string, to?: string) => {
+    const query = new URLSearchParams();
+    if (from) query.set("from", from);
+    if (to) query.set("to", to);
+    return request<DailyTrendItem[]>(
+      `/api/reports/daily-trends?${query.toString()}`,
+    ).then((rows) => ({ data: rows }));
+  },
+
+  getUnauthorizedStats: (from?: string, to?: string) => {
+    const query = new URLSearchParams();
+    if (from) query.set("from", from);
+    if (to) query.set("to", to);
+    return request<UnauthorizedStatItem[]>(
+      `/api/reports/unauthorized?${query.toString()}`,
+    ).then((rows) => ({ data: rows }));
   },
 
   getSummary: (from?: string, to?: string) => {
