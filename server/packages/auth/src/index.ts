@@ -3,6 +3,7 @@ import type { Database } from "@oau-vehicle-pass/db";
 import * as schema from "@oau-vehicle-pass/db/schema/auth";
 import { betterAuth } from "better-auth";
 import { expo } from "@better-auth/expo";
+import { dash } from "@better-auth/infra";
 import { bearer } from "better-auth/plugins";
 
 export type AuthConfig = {
@@ -22,7 +23,7 @@ export function createAuth(
 
   if (!secret) {
     throw new Error(
-      "BETTER_AUTH_SECRET is not set! Please define BETTER_AUTH_SECRET in your environment variables."
+      "BETTER_AUTH_SECRET is not set! Please define BETTER_AUTH_SECRET in your environment variables.",
     );
   }
 
@@ -67,10 +68,7 @@ export function createAuth(
         },
       },
     },
-    plugins: [
-      expo(),
-      bearer(),
-    ],
+    plugins: [expo(), bearer(), dash()],
   });
 }
 

@@ -11,6 +11,7 @@
   "dependencies": {
     "@better-auth/drizzle-adapter": "1.7.5",
     "@better-auth/expo": "^1.7.5",
+    "@better-auth/infra": "^0.4.11",
     "@oau-vehicle-pass/db": "*",
     "better-auth": "1.7.5",
     "drizzle-orm": "1.0.0-rc.4",
