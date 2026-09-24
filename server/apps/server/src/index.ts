@@ -80,6 +80,15 @@ app.get("/", (_req, res) => {
   res.status(200).json({ status: "OK", service: "OAU Vehicle Pass API" });
 });
 
+// ─── Global Error Handler ───────────────────────────────────────────────────
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error("Unhandled Server Error:", err);
+  res.status(err?.status || 500).json({
+    error: err?.message || "Internal Server Error",
+    code: err?.code,
+  });
+});
+
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 
 app.listen(port, () => {
