@@ -18,7 +18,8 @@
     "db:migrate": "turbo run db:migrate -F @oau-vehicle-pass/db --",
     "env:generate": "varlock codegen --path ./apps/server/ && varlock codegen --path ./packages/db/",
     "postinstall": "varlock codegen --path ./apps/server/ && varlock codegen --path ./packages/db/",
-    "auth:generate": "cd apps/server && npm run auth:generate"
+    "auth:generate": "cd apps/server && npm run auth:generate",
+    "db:seed": "cd apps/server && npx tsx src/seed.ts"
   },
   "dependencies": {
     "turbo": "^2.10.12",

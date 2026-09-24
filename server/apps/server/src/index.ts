@@ -77,7 +77,17 @@ app.use(cors(corsOptions));
 app.options("/{*splat}", cors(corsOptions));
 
 // Better-auth handles its own body parsing
-app.all("/api/auth{/*path}", toNodeHandler(auth));
+const betterAuthHandler = toNodeHandler(auth);
+app.all("/api/auth{/*path}", (req, res, next) => {
+  betterAuthHandler(req, res).catch((err: unknown) => {
+    console.error("Better-auth unhandled error:", err);
+    if (!res.headersSent) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : "Internal auth error",
+      });
+    }
+  });
+});
 
 app.use(express.json({ limit: "10mb" })); // 10 MB for base64 photo uploads
 
