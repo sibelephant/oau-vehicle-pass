@@ -308,7 +308,7 @@ export const GateFeedView: React.FC = () => {
                             <Camera size={14} color="#06b6d4" />
                           )}
                           {item.log.channel === "qr" && (
-                            <QrCode size={14} color="#3b82f6" />
+                            <QrCode size={14} color="#d4af37" />
                           )}
                           {item.log.channel === "manual" && (
                             <UserCheck size={14} color="#f59e0b" />

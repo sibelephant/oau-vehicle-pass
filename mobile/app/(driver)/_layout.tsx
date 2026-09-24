@@ -17,14 +17,14 @@ export default function DriverLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#111827",
-          borderTopColor: "#1f2937",
+          backgroundColor: "#001633",
+          borderTopColor: "rgba(212, 175, 55, 0.2)",
           paddingBottom: 6,
           paddingTop: 6,
           height: 62,
         },
-        tabBarActiveTintColor: "#10b981",
-        tabBarInactiveTintColor: "#6b7280",
+        tabBarActiveTintColor: "#d4af37",
+        tabBarInactiveTintColor: "#8da4c4",
         tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
       }}
     >

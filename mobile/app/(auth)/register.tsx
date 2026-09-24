@@ -78,7 +78,7 @@ export default function RegisterScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-gray-950"
+      className="flex-1 bg-[#001633]"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
@@ -88,20 +88,20 @@ export default function RegisterScreen() {
       >
         {/* Header */}
         <View className="items-center mb-8">
-          <View className="w-20 h-20 rounded-full bg-emerald-800 items-center justify-center mb-4">
+          <View className="w-20 h-20 rounded-full bg-[#002147] border-2 border-[#d4af37] items-center justify-center mb-4">
             <Text className="text-4xl">🎓</Text>
           </View>
           <Text className="text-white text-3xl font-bold tracking-tight">
             Create Account
           </Text>
-          <Text className="text-gray-400 text-base mt-1">
+          <Text className="text-amber-200/80 text-base mt-1">
             Join the OAU Vehicle Pass system
           </Text>
         </View>
 
         {/* Role selector */}
         <View className="mb-6">
-          <Text className="text-gray-400 text-sm font-medium mb-3">
+          <Text className="text-gray-300 text-sm font-medium mb-3">
             I am a...
           </Text>
           <View className="flex-row gap-3">
@@ -111,13 +111,13 @@ export default function RegisterScreen() {
                 onPress={() => setRole(r.value)}
                 className={`flex-1 rounded-2xl p-4 border-2 ${
                   role === r.value
-                    ? "bg-emerald-900 border-emerald-500"
-                    : "bg-gray-900 border-gray-700"
+                    ? "bg-[#002147] border-[#d4af37]"
+                    : "bg-[#001d40] border-[#0d3366]"
                 }`}
               >
                 <Text className="text-2xl mb-1">{r.emoji}</Text>
                 <Text
-                  className={`font-bold text-sm ${role === r.value ? "text-emerald-300" : "text-white"}`}
+                  className={`font-bold text-sm ${role === r.value ? "text-[#f5c542]" : "text-white"}`}
                 >
                   {r.label}
                 </Text>
@@ -130,16 +130,16 @@ export default function RegisterScreen() {
         </View>
 
         {/* Form */}
-        <View className="bg-gray-900 rounded-2xl p-6">
+        <View className="bg-[#002147] rounded-2xl p-6 border border-[#d4af37]/25 shadow-xl">
           {/* Name */}
           <View className="mb-4">
-            <Text className="text-gray-400 text-sm font-medium mb-2">
+            <Text className="text-gray-300 text-sm font-medium mb-2">
               Full name
             </Text>
             <TextInput
-              className="bg-gray-800 text-white rounded-xl px-4 py-3.5 text-base border border-gray-700"
+              className="bg-[#001633] text-white rounded-xl px-4 py-3.5 text-base border border-[#0d3366]"
               placeholder="Ada Okonkwo"
-              placeholderTextColor="#6b7280"
+              placeholderTextColor="#64748b"
               autoCapitalize="words"
               value={name}
               onChangeText={setName}
@@ -148,13 +148,13 @@ export default function RegisterScreen() {
 
           {/* Email */}
           <View className="mb-4">
-            <Text className="text-gray-400 text-sm font-medium mb-2">
+            <Text className="text-gray-300 text-sm font-medium mb-2">
               Email address
             </Text>
             <TextInput
-              className="bg-gray-800 text-white rounded-xl px-4 py-3.5 text-base border border-gray-700"
+              className="bg-[#001633] text-white rounded-xl px-4 py-3.5 text-base border border-[#0d3366]"
               placeholder="you@oauife.edu.ng"
-              placeholderTextColor="#6b7280"
+              placeholderTextColor="#64748b"
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -165,13 +165,13 @@ export default function RegisterScreen() {
 
           {/* Password */}
           <View className="mb-6">
-            <Text className="text-gray-400 text-sm font-medium mb-2">
+            <Text className="text-gray-300 text-sm font-medium mb-2">
               Password
             </Text>
             <TextInput
-              className="bg-gray-800 text-white rounded-xl px-4 py-3.5 text-base border border-gray-700"
+              className="bg-[#001633] text-white rounded-xl px-4 py-3.5 text-base border border-[#0d3366]"
               placeholder="Min. 8 characters"
-              placeholderTextColor="#6b7280"
+              placeholderTextColor="#64748b"
               secureTextEntry
               value={password}
               onChangeText={setPassword}
@@ -182,12 +182,12 @@ export default function RegisterScreen() {
           <Pressable
             onPress={handleRegister}
             disabled={loading}
-            className="bg-emerald-600 rounded-xl py-4 items-center active:bg-emerald-700"
+            className="bg-[#d4af37] rounded-xl py-4 items-center active:bg-[#b89628]"
           >
             {loading ? (
-              <ActivityIndicator color="#ffffff" />
+              <ActivityIndicator color="#001633" />
             ) : (
-              <Text className="text-white font-bold text-base">
+              <Text className="text-[#001633] font-bold text-base">
                 Create Account
               </Text>
             )}
@@ -201,7 +201,7 @@ export default function RegisterScreen() {
         >
           <Text className="text-gray-400 text-sm">
             Already have an account?{" "}
-            <Text className="text-emerald-400 font-semibold">Sign In</Text>
+            <Text className="text-[#f5c542] font-semibold">Sign In</Text>
           </Text>
         </Pressable>
       </ScrollView>

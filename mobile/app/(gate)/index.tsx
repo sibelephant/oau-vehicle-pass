@@ -100,27 +100,27 @@ export default function GateScanScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-gray-950"
+      className="flex-1 bg-[#001633]"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       {/* Header */}
       <View className="px-5 pt-14 pb-4 flex-row items-center justify-between">
         <View>
           <Text className="text-white text-xl font-bold">Gate Scanner</Text>
-          <Text className="text-gray-400 text-xs mt-0.5">
+          <Text className="text-amber-200/70 text-xs mt-0.5">
             {user?.name} · Officer
           </Text>
         </View>
         <View className="flex-row gap-2">
           <Pressable
             onPress={() => router.push("/(gate)/log" as never)}
-            className="bg-gray-800 rounded-full px-4 py-2"
+            className="bg-[#002147] border border-[#0d3366] rounded-full px-4 py-2"
           >
-            <Text className="text-gray-300 text-sm">📋 Log</Text>
+            <Text className="text-[#f5c542] text-sm font-semibold">📋 Log</Text>
           </Pressable>
           <Pressable
             onPress={signOut}
-            className="bg-gray-800 rounded-full px-3 py-2"
+            className="bg-[#002147] border border-[#0d3366] rounded-full px-3 py-2"
           >
             <Text className="text-gray-300 text-sm">⏻</Text>
           </Pressable>
@@ -128,7 +128,7 @@ export default function GateScanScreen() {
       </View>
 
       {/* Mode toggle */}
-      <View className="flex-row mx-5 bg-gray-900 rounded-2xl p-1 mb-4">
+      <View className="flex-row mx-5 bg-[#002147] border border-[#0d3366] rounded-2xl p-1 mb-4">
         {(["qr", "plate"] as ScanMode[]).map((m) => (
           <Pressable
             key={m}
@@ -137,10 +137,10 @@ export default function GateScanScreen() {
               setScanning(true);
               setPlateInput("");
             }}
-            className={`flex-1 py-3 rounded-xl items-center ${mode === m ? "bg-emerald-700" : ""}`}
+            className={`flex-1 py-3 rounded-xl items-center ${mode === m ? "bg-[#d4af37]" : ""}`}
           >
             <Text
-              className={`font-bold text-sm ${mode === m ? "text-white" : "text-gray-400"}`}
+              className={`font-bold text-sm ${mode === m ? "text-[#001633]" : "text-gray-400"}`}
             >
               {m === "qr" ? "📱 QR Code" : "🔢 Plate Number"}
             </Text>
@@ -160,14 +160,14 @@ export default function GateScanScreen() {
                 </Text>
                 <Pressable
                   onPress={requestPermission}
-                  className="bg-emerald-600 rounded-xl px-6 py-3"
+                  className="bg-[#d4af37] rounded-xl px-6 py-3"
                 >
-                  <Text className="text-white font-bold">Allow Camera</Text>
+                  <Text className="text-[#001633] font-bold">Allow Camera</Text>
                 </Pressable>
               </View>
             ) : processing ? (
               <View className="flex-1 items-center justify-center gap-4">
-                <ActivityIndicator size="large" color="#10b981" />
+                <ActivityIndicator size="large" color="#d4af37" />
                 <Text className="text-gray-300">Verifying…</Text>
               </View>
             ) : (
@@ -185,10 +185,10 @@ export default function GateScanScreen() {
                       height: 240,
                       borderRadius: 16,
                       borderWidth: 2,
-                      borderColor: "#10b981",
+                      borderColor: "#d4af37",
                     }}
                   />
-                  <Text className="text-emerald-400 text-sm mt-4 font-medium">
+                  <Text className="text-[#f5c542] text-sm mt-4 font-semibold">
                     Aim camera at the driver's QR pass
                   </Text>
                 </View>
@@ -209,8 +209,8 @@ export default function GateScanScreen() {
                 </View>
               )}
             </View>
-            <View className="bg-gray-900 rounded-3xl p-8 w-full items-center">
-              <Text className="text-gray-400 text-sm mb-3">
+            <View className="bg-[#002147] border border-[#0d3366] rounded-3xl p-8 w-full items-center">
+              <Text className="text-gray-300 text-sm mb-3">
                 Capture the plate, then enter the detected number
               </Text>
               <Pressable
@@ -223,16 +223,16 @@ export default function GateScanScreen() {
                     setPlateImageUri(`data:image/jpeg;base64,${photo.base64}`);
                 }}
                 disabled={!permission?.granted || processing}
-                className="mb-4 bg-gray-800 rounded-xl px-5 py-3"
+                className="mb-4 bg-[#001633] border border-[#0d3366] rounded-xl px-5 py-3"
               >
-                <Text className="text-emerald-400 font-bold">
+                <Text className="text-[#f5c542] font-bold">
                   {plateImageUri
                     ? "Plate image captured"
                     : "Capture plate image"}
                 </Text>
               </Pressable>
               <TextInput
-                className="bg-white text-gray-900 text-center text-3xl font-black tracking-widest rounded-2xl px-6 py-4 w-full"
+                className="bg-white text-gray-900 text-center text-3xl font-black tracking-widest rounded-2xl px-6 py-4 w-full border-2 border-[#d4af37]"
                 placeholder="ABC 123 XY"
                 placeholderTextColor="#9ca3af"
                 value={plateInput}
@@ -245,12 +245,12 @@ export default function GateScanScreen() {
               <Pressable
                 onPress={handlePlateScan}
                 disabled={processing}
-                className="mt-5 bg-emerald-600 rounded-2xl py-4 px-12 active:bg-emerald-700"
+                className="mt-5 bg-[#d4af37] rounded-2xl py-4 px-12 active:bg-[#b89628]"
               >
                 {processing ? (
-                  <ActivityIndicator color="#fff" />
+                  <ActivityIndicator color="#001633" />
                 ) : (
-                  <Text className="text-white font-bold text-lg">Verify →</Text>
+                  <Text className="text-[#001633] font-bold text-lg">Verify →</Text>
                 )}
               </Pressable>
             </View>

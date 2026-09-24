@@ -1,6 +1,7 @@
 import { toNodeHandler } from "better-auth/node";
 import cors from "cors";
 import express from "express";
+import morgan from "morgan";
 
 import { ENV } from "./env.server";
 import { auth } from "./services";
@@ -10,6 +11,8 @@ import gateRouter from "./routes/gate";
 import reportsRouter from "./routes/reports";
 
 const app = express();
+
+app.use(morgan("dev"));
 
 const allowedCorsOrigins = [
   ENV.CORS_ORIGIN,
@@ -21,7 +24,10 @@ const allowedCorsOrigins = [
 ].filter(Boolean);
 
 const corsOptions = {
-  origin: (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) => {
+  origin: (
+    origin: string | undefined,
+    callback: (error: Error | null, allow?: boolean) => void,
+  ) => {
     // Native clients and command-line health checks do not send an Origin header.
     if (!origin || allowedCorsOrigins.includes(origin)) {
       return callback(null, true);

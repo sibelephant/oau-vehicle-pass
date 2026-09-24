@@ -6,7 +6,7 @@ export default function GateLayout() {
       screenOptions={{
         headerShown: false,
         animation: "slide_from_right",
-        contentStyle: { backgroundColor: "#030712" },
+        contentStyle: { backgroundColor: "#001633" },
       }}
     />
   );

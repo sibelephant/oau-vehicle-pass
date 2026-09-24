@@ -67,8 +67,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSuccess }) => {
         alignItems: "center",
         justifyContent: "center",
         padding: "24px",
-        background:
-          "radial-gradient(ellipse at 50% 30%, #172554 0%, #0a0e17 70%)",
+        background: "#001229",
       }}
     >
       <div
@@ -87,15 +86,16 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSuccess }) => {
               width: "60px",
               height: "60px",
               borderRadius: "16px",
-              background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
+              background: "#002147",
+              border: "2px solid #d4af37",
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)",
+              boxShadow: "0 0 24px rgba(212, 175, 55, 0.35)",
               marginBottom: "16px",
             }}
           >
-            <ShieldCheck size={32} color="#ffffff" />
+            <ShieldCheck size={32} color="#d4af37" />
           </div>
           <h1 style={{ fontSize: "1.5rem", fontWeight: 800, margin: 0 }}>
             Security Command Portal

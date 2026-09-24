@@ -57,7 +57,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       style={{
         width: "280px",
         minWidth: "280px",
-        background: "linear-gradient(180deg, #0e1524 0%, #0a0e17 100%)",
+        background: "#001a38",
         borderRight: "1px solid var(--border-subtle)",
         display: "flex",
         flexDirection: "column",
@@ -84,14 +84,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
               width: "42px",
               height: "42px",
               borderRadius: "10px",
-              background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+              background: "#002147",
+              border: "2px solid #d4af37",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 0 20px rgba(37, 99, 235, 0.4)",
+              boxShadow: "0 0 16px rgba(212, 175, 55, 0.3)",
             }}
           >
-            <ShieldCheck size={24} color="#ffffff" />
+            <ShieldCheck size={24} color="#d4af37" />
           </div>
           <div>
             <h2
@@ -163,16 +164,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   borderRadius: "8px",
                   border: "none",
                   background: isActive
-                    ? "linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%)"
+                    ? "rgba(212, 175, 55, 0.12)"
                     : "transparent",
-                  color: isActive ? "#60a5fa" : "var(--text-muted)",
+                  color: isActive ? "#f5c542" : "var(--text-muted)",
                   fontWeight: isActive ? 600 : 500,
                   fontSize: "0.875rem",
                   cursor: "pointer",
                   transition: "all var(--transition-fast)",
                   outline: "none",
                   borderLeft: isActive
-                    ? "3px solid var(--primary)"
+                    ? "3px solid #d4af37"
                     : "3px solid transparent",
                 }}
                 onMouseEnter={(e) => {
@@ -194,7 +195,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 >
                   <Icon
                     size={18}
-                    color={isActive ? "#60a5fa" : "currentColor"}
+                    color={isActive ? "#f5c542" : "currentColor"}
                   />
                   <span>{item.label}</span>
                 </div>
@@ -234,7 +235,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         style={{
           padding: "16px",
           borderTop: "1px solid var(--border-subtle)",
-          background: "rgba(10, 14, 23, 0.8)",
+          background: "#001633",
         }}
       >
         <div
@@ -250,13 +251,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
               width: "36px",
               height: "36px",
               borderRadius: "50%",
-              background: "linear-gradient(135deg, #8b5cf6, #3b82f6)",
+              background: "#002147",
+              border: "2px solid #d4af37",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontWeight: 700,
               fontSize: "0.85rem",
-              color: "#ffffff",
+              color: "#f5c542",
             }}
           >
             {user?.name ? user.name.slice(0, 2).toUpperCase() : "AD"}

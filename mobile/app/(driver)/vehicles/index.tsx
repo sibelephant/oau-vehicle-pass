@@ -20,7 +20,7 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   const activePass = vehicle.passes?.[0];
 
   return (
-    <View className={`rounded-2xl p-5 mb-4 border border-gray-800 ${info.bg}`}>
+    <View className={`rounded-2xl p-5 mb-4 border border-[#0d3366] ${info.bg}`}>
       {/* Plate + status */}
       <View className="flex-row items-center justify-between mb-3">
         <View className="bg-white rounded-lg px-3 py-1">
@@ -54,8 +54,8 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
 
       {/* Pass info */}
       {activePass && (
-        <View className="mt-3 bg-emerald-950/60 rounded-xl p-3">
-          <Text className="text-emerald-400 text-xs">
+        <View className="mt-3 bg-[#002147] border border-[#d4af37]/35 rounded-xl p-3">
+          <Text className="text-[#f5c542] text-xs font-semibold">
             Pass valid until:{" "}
             {new Date(activePass.expiresAt).toLocaleDateString("en-NG", {
               day: "numeric",
@@ -99,10 +99,10 @@ export default function VehiclesListScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-gray-950"
+      className="flex-1 bg-[#001633]"
       contentContainerClassName="px-5 pb-10"
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchVehicles(); }} tintColor="#10b981" />
+        <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchVehicles(); }} tintColor="#d4af37" />
       }
     >
       <View className="pt-14 pb-4">
@@ -113,7 +113,7 @@ export default function VehiclesListScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator color="#10b981" className="py-16" />
+        <ActivityIndicator color="#d4af37" className="py-16" />
       ) : vehicles.length === 0 ? (
         <View className="items-center py-20">
           <Text className="text-5xl mb-4">🚗</Text>

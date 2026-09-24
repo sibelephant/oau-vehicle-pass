@@ -58,13 +58,13 @@ export default function DriverHome() {
 
   return (
     <ScrollView
-      className="flex-1 bg-gray-950"
+      className="flex-1 bg-[#001633]"
       contentContainerClassName="pb-10"
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor="#10b981"
+          tintColor="#d4af37"
         />
       }
     >
@@ -79,20 +79,20 @@ export default function DriverHome() {
           </View>
           <Pressable
             onPress={signOut}
-            className="bg-gray-800 rounded-full px-4 py-2"
+            className="bg-[#002147] border border-[#0d3366] rounded-full px-4 py-2"
           >
             <Text className="text-gray-300 text-sm">Sign out</Text>
           </Pressable>
         </View>
 
         {/* OAU badge */}
-        <View className="mt-4 bg-emerald-900/40 border border-emerald-800 rounded-2xl px-4 py-3 flex-row items-center gap-3">
+        <View className="mt-4 bg-[#002147] border border-[#d4af37]/40 rounded-2xl px-4 py-3 flex-row items-center gap-3">
           <Text className="text-2xl">🎓</Text>
           <View>
-            <Text className="text-emerald-300 font-semibold text-sm">
+            <Text className="text-[#f5c542] font-semibold text-sm">
               Obafemi Awolowo University
             </Text>
-            <Text className="text-emerald-500 text-xs">
+            <Text className="text-amber-200/70 text-xs">
               Vehicle Pass Authentication System
             </Text>
           </View>
@@ -101,20 +101,20 @@ export default function DriverHome() {
 
       {/* Stats row */}
       <View className="flex-row gap-3 px-6 mb-6">
-        <View className="flex-1 bg-gray-900 rounded-2xl p-4">
+        <View className="flex-1 bg-[#002147] border border-[#0d3366] rounded-2xl p-4">
           <Text className="text-3xl font-bold text-white">
             {vehicles.length}
           </Text>
           <Text className="text-gray-400 text-xs mt-1">Registered</Text>
         </View>
-        <View className="flex-1 bg-emerald-900/50 rounded-2xl p-4">
-          <Text className="text-3xl font-bold text-emerald-300">
+        <View className="flex-1 bg-[#002147] border border-[#d4af37]/40 rounded-2xl p-4">
+          <Text className="text-3xl font-bold text-[#f5c542]">
             {approvedCount}
           </Text>
-          <Text className="text-gray-400 text-xs mt-1">Active Passes</Text>
+          <Text className="text-amber-200/80 text-xs mt-1">Active Passes</Text>
         </View>
-        <View className="flex-1 bg-amber-900/30 rounded-2xl p-4">
-          <Text className="text-3xl font-bold text-amber-300">
+        <View className="flex-1 bg-[#002147] border border-[#0d3366] rounded-2xl p-4">
+          <Text className="text-3xl font-bold text-amber-400">
             {pendingCount}
           </Text>
           <Text className="text-gray-400 text-xs mt-1">Pending</Text>
@@ -125,17 +125,17 @@ export default function DriverHome() {
       <View className="px-6 mb-6">
         <Pressable
           onPress={() => router.push("/(driver)/vehicles/register" as never)}
-          className="bg-emerald-600 rounded-2xl py-4 px-6 flex-row items-center justify-between active:bg-emerald-700"
+          className="bg-[#d4af37] rounded-2xl py-4 px-6 flex-row items-center justify-between active:bg-[#b89628]"
         >
           <View>
-            <Text className="text-white font-bold text-base">
+            <Text className="text-[#001633] font-bold text-base">
               Register a Vehicle
             </Text>
-            <Text className="text-emerald-200 text-xs mt-0.5">
+            <Text className="text-[#001633]/80 text-xs mt-0.5">
               Get your digital vehicle pass
             </Text>
           </View>
-          <Text className="text-2xl">＋</Text>
+          <Text className="text-[#001633] text-2xl font-bold">＋</Text>
         </Pressable>
       </View>
 
@@ -146,9 +146,9 @@ export default function DriverHome() {
         </Text>
 
         {loading ? (
-          <ActivityIndicator color="#10b981" className="py-8" />
+          <ActivityIndicator color="#d4af37" className="py-8" />
         ) : vehicles.length === 0 ? (
-          <View className="bg-gray-900 rounded-2xl p-8 items-center">
+          <View className="bg-[#002147] border border-[#0d3366] rounded-2xl p-8 items-center">
             <Text className="text-4xl mb-3">🚗</Text>
             <Text className="text-gray-400 text-center text-sm">
               No vehicles registered yet.{"\n"}Tap the button above to get
@@ -159,7 +159,7 @@ export default function DriverHome() {
           vehicles.map((v) => (
             <View
               key={v.id}
-              className={`rounded-2xl p-4 mb-3 border border-gray-800 ${STATUS_BG[v.status] ?? "bg-gray-900"}`}
+              className={`rounded-2xl p-4 mb-3 border border-[#0d3366] ${STATUS_BG[v.status] ?? "bg-[#002147]"}`}
             >
               <View className="flex-row items-center justify-between mb-1">
                 <Text className="text-white font-bold text-lg tracking-widest">

@@ -299,7 +299,7 @@ export const ApprovalsView: React.FC = () => {
                             gap: "6px",
                           }}
                         >
-                          <FileText size={15} color="#3b82f6" />
+                          <FileText size={15} color="#d4af37" />
                           <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>
                             {v.documents?.length || 0} file(s)
                           </span>

@@ -491,7 +491,7 @@ export const OverviewView: React.FC = () => {
                 <span
                   style={{ display: "flex", alignItems: "center", gap: "6px" }}
                 >
-                  <QrCode size={15} color="#3b82f6" />
+                  <QrCode size={15} color="#d4af37" />
                   <strong>QR Digital Pass</strong>
                 </span>
                 <span
@@ -517,7 +517,7 @@ export const OverviewView: React.FC = () => {
                   style={{
                     height: "100%",
                     width: `${summary.totalEntries > 0 ? (summary.qrCount / summary.totalEntries) * 100 : 0}%`,
-                    background: "linear-gradient(90deg, #3b82f6, #60a5fa)",
+                    background: "#d4af37",
                     borderRadius: "4px",
                   }}
                 />
@@ -565,7 +565,7 @@ export const OverviewView: React.FC = () => {
                   style={{
                     height: "100%",
                     width: `${summary.totalEntries > 0 ? (summary.anprCount / summary.totalEntries) * 100 : 0}%`,
-                    background: "linear-gradient(90deg, #06b6d4, #22d3ee)",
+                    background: "#0284c7",
                     borderRadius: "4px",
                   }}
                 />
@@ -613,7 +613,7 @@ export const OverviewView: React.FC = () => {
                   style={{
                     height: "100%",
                     width: `${summary.totalEntries > 0 ? (summary.manualCount / summary.totalEntries) * 100 : 0}%`,
-                    background: "linear-gradient(90deg, #f59e0b, #fbbf24)",
+                    background: "#f59e0b",
                     borderRadius: "4px",
                   }}
                 />
@@ -714,13 +714,13 @@ export const OverviewView: React.FC = () => {
                       width: "100%",
                       height: `${Math.max(heightPct, 6)}%`,
                       background: isPeak
-                        ? "linear-gradient(180deg, #f59e0b, #d97706)"
-                        : "linear-gradient(180deg, #3b82f6, #1d4ed8)",
+                        ? "#d4af37"
+                        : "#0a356e",
                       borderRadius: "4px 4px 0 0",
                       transition: "height 0.4s ease",
                       cursor: "pointer",
                       boxShadow: isPeak
-                        ? "0 0 12px rgba(245, 158, 11, 0.4)"
+                        ? "0 0 12px rgba(212, 175, 55, 0.4)"
                         : "none",
                     }}
                   />

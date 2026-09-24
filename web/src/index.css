@@ -5,17 +5,17 @@
   --font-body: 'Plus Jakarta Sans', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  --color-surface-bg: #0a0e17;
-  --color-surface-card: rgba(18, 26, 43, 0.75);
-  --color-surface-card-hover: rgba(25, 36, 60, 0.85);
-  --color-surface-elevated: #182236;
-  --color-surface-input: #121a2b;
+  --color-surface-bg: #001229;
+  --color-surface-card: rgba(0, 33, 71, 0.75);
+  --color-surface-card-hover: rgba(5, 45, 94, 0.85);
+  --color-surface-elevated: #072b59;
+  --color-surface-input: #001633;
 
-  --color-brand-50: #eff6ff;
-  --color-brand-100: #dbeafe;
-  --color-brand-500: #3b82f6;
-  --color-brand-600: #2563eb;
-  --color-brand-700: #1d4ed8;
+  --color-brand-50: #fefce8;
+  --color-brand-100: #fef9c3;
+  --color-brand-500: #d4af37;
+  --color-brand-600: #c59b27;
+  --color-brand-700: #a17c1b;
 }
 
 :root {
@@ -23,23 +23,23 @@
   --font-body: 'Plus Jakarta Sans', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  --bg-primary: #0a0e17;
-  --bg-secondary: #101726;
-  --bg-card: rgba(18, 26, 43, 0.75);
-  --bg-card-hover: rgba(25, 36, 60, 0.85);
-  --bg-elevated: #182236;
-  --bg-input: #121a2b;
+  --bg-primary: #001229;
+  --bg-secondary: #001a38;
+  --bg-card: rgba(0, 33, 71, 0.75);
+  --bg-card-hover: rgba(5, 45, 94, 0.85);
+  --bg-elevated: #072b59;
+  --bg-input: #001633;
 
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-glow: rgba(59, 130, 246, 0.3);
+  --border-subtle: rgba(212, 175, 55, 0.15);
+  --border-glow: rgba(212, 175, 55, 0.35);
 
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --text-dim: #64748b;
 
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
-  --primary-glow: rgba(59, 130, 246, 0.25);
+  --primary: #d4af37;
+  --primary-hover: #e5a823;
+  --primary-glow: rgba(212, 175, 55, 0.25);
 
   --status-success: #10b981;
   --status-success-bg: rgba(16, 185, 129, 0.12);
@@ -53,9 +53,9 @@
   --status-warning-bg: rgba(245, 158, 11, 0.12);
   --status-warning-border: rgba(245, 158, 11, 0.3);
 
-  --status-info: #3b82f6;
-  --status-info-bg: rgba(59, 130, 246, 0.12);
-  --status-info-border: rgba(59, 130, 246, 0.3);
+  --status-info: #d4af37;
+  --status-info-bg: rgba(212, 175, 55, 0.12);
+  --status-info-border: rgba(212, 175, 55, 0.3);
 }
 
 body {
@@ -65,10 +65,6 @@ body {
   min-height: 100vh;
   margin: 0;
   -webkit-font-smoothing: antialiased;
-  background-image: 
-    radial-gradient(at 10% 10%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
-    radial-gradient(at 90% 90%, rgba(139, 92, 246, 0.06) 0px, transparent 50%);
-  background-attachment: fixed;
 }
 
 #root {
@@ -85,12 +81,12 @@ body {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .glass-panel:hover {
-  border-color: rgba(255, 255, 255, 0.14);
+  border-color: rgba(212, 175, 55, 0.3);
 }
 
 /* Custom buttons */
@@ -110,14 +106,16 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: #ffffff;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  background: #d4af37;
+  color: #001633;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.3);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+  background: #e5a823;
+  color: #001229;
+  box-shadow: 0 6px 18px rgba(212, 175, 55, 0.45);
   transform: translateY(-1px);
 }
 
@@ -129,7 +127,7 @@ body {
 
 .btn-secondary:hover:not(:disabled) {
   background: var(--bg-card-hover);
-  border-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(212, 175, 55, 0.3);
   color: #ffffff;
 }
 
@@ -202,7 +200,7 @@ body {
 
 .badge-info {
   background: var(--status-info-bg);
-  color: #60a5fa;
+  color: #f5c542;
   border: 1px solid var(--status-info-border);
 }
 

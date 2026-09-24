@@ -58,7 +58,7 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
       {Array.from({ length: total }).map((_, i) => (
         <View
           key={i}
-          className={`h-1.5 rounded-full flex-1 ${i < current ? "bg-emerald-500" : i === current ? "bg-emerald-400" : "bg-gray-700"}`}
+          className={`h-1.5 rounded-full flex-1 ${i < current ? "bg-[#d4af37]" : i === current ? "bg-[#f5c542]" : "bg-[#0d3366]"}`}
         />
       ))}
     </View>
@@ -90,9 +90,9 @@ function Field({
     <View className="mb-4">
       <FieldLabel>{label}</FieldLabel>
       <TextInput
-        className="bg-gray-800 text-white rounded-xl px-4 py-3.5 text-base border border-gray-700"
+        className="bg-[#001633] text-white rounded-xl px-4 py-3.5 text-base border border-[#0d3366]"
         placeholder={placeholder}
-        placeholderTextColor="#6b7280"
+        placeholderTextColor="#64748b"
         value={value}
         onChangeText={onChangeText}
         autoCapitalize={autoCapitalize}
@@ -208,14 +208,14 @@ export default function RegisterVehicleScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-gray-950"
+      className="flex-1 bg-[#001633]"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       {/* Top bar */}
       <View className="px-5 pt-14 pb-3 flex-row items-center gap-4">
         <Pressable
           onPress={() => (step === 0 ? router.back() : setStep((s) => s - 1))}
-          className="w-9 h-9 rounded-full bg-gray-800 items-center justify-center"
+          className="w-9 h-9 rounded-full bg-[#002147] border border-[#0d3366] items-center justify-center"
         >
           <Text className="text-white text-lg">←</Text>
         </Pressable>
@@ -223,7 +223,7 @@ export default function RegisterVehicleScreen() {
           <Text className="text-white font-bold text-lg">
             {STEP_TITLES[step]}
           </Text>
-          <Text className="text-gray-500 text-xs">
+          <Text className="text-amber-200/70 text-xs">
             Step {step + 1} of {STEP_TITLES.length}
           </Text>
         </View>
@@ -256,15 +256,15 @@ export default function RegisterVehicleScreen() {
                     onPress={() => setCategory(cat.value)}
                     className={`flex-row items-center gap-2 px-4 py-3 rounded-xl border-2 ${
                       category === cat.value
-                        ? "border-emerald-500 bg-emerald-900/40"
-                        : "border-gray-700 bg-gray-900"
+                        ? "border-[#d4af37] bg-[#002147]"
+                        : "border-[#0d3366] bg-[#001a38]"
                     }`}
                   >
                     <Text>{cat.emoji}</Text>
                     <Text
                       className={`font-semibold text-sm ${
                         category === cat.value
-                          ? "text-emerald-300"
+                          ? "text-[#f5c542]"
                           : "text-gray-300"
                       }`}
                     >
@@ -331,12 +331,12 @@ export default function RegisterVehicleScreen() {
               return (
                 <View
                   key={dt.value}
-                  className="bg-gray-900 rounded-2xl p-4 mb-4"
+                  className="bg-[#002147] border border-[#0d3366] rounded-2xl p-4 mb-4"
                 >
                   <Text className="text-white font-semibold text-sm mb-1">
                     {dt.label}
                   </Text>
-                  <Text className="text-gray-500 text-xs mb-3">{dt.hint}</Text>
+                  <Text className="text-gray-400 text-xs mb-3">{dt.hint}</Text>
                   {picked ? (
                     <View>
                       <Image
@@ -348,13 +348,13 @@ export default function RegisterVehicleScreen() {
                         onPress={() => pickPhoto(dt.value)}
                         className="mt-2 py-2 items-center"
                       >
-                        <Text className="text-emerald-400 text-sm">Retake</Text>
+                        <Text className="text-[#f5c542] text-sm">Retake</Text>
                       </Pressable>
                     </View>
                   ) : (
                     <Pressable
                       onPress={() => pickPhoto(dt.value)}
-                      className="border-2 border-dashed border-gray-700 rounded-xl h-32 items-center justify-center"
+                      className="border-2 border-dashed border-[#d4af37]/35 rounded-xl h-32 items-center justify-center bg-[#001a38]"
                     >
                       <Text className="text-3xl mb-1">📷</Text>
                       <Text className="text-gray-400 text-sm">
@@ -376,8 +376,8 @@ export default function RegisterVehicleScreen() {
             </Text>
 
             {/* Vehicle summary */}
-            <View className="bg-gray-900 rounded-2xl p-4 mb-4">
-              <Text className="text-gray-400 text-xs font-semibold uppercase mb-3">
+            <View className="bg-[#002147] border border-[#0d3366] rounded-2xl p-4 mb-4">
+              <Text className="text-[#f5c542] text-xs font-semibold uppercase mb-3">
                 Vehicle
               </Text>
               <SummaryRow label="Plate" value={plateNumber.toUpperCase()} />
@@ -387,16 +387,16 @@ export default function RegisterVehicleScreen() {
               {color && <SummaryRow label="Color" value={color} />}
             </View>
 
-            <View className="bg-gray-900 rounded-2xl p-4 mb-4">
-              <Text className="text-gray-400 text-xs font-semibold uppercase mb-3">
+            <View className="bg-[#002147] border border-[#0d3366] rounded-2xl p-4 mb-4">
+              <Text className="text-[#f5c542] text-xs font-semibold uppercase mb-3">
                 Owner
               </Text>
               <SummaryRow label="Name" value={ownerName} />
               <SummaryRow label="Contact" value={ownerContact} />
             </View>
 
-            <View className="bg-gray-900 rounded-2xl p-4 mb-6">
-              <Text className="text-gray-400 text-xs font-semibold uppercase mb-3">
+            <View className="bg-[#002147] border border-[#0d3366] rounded-2xl p-4 mb-6">
+              <Text className="text-[#f5c542] text-xs font-semibold uppercase mb-3">
                 Documents
               </Text>
               {docs.length === 0 ? (
@@ -418,12 +418,12 @@ export default function RegisterVehicleScreen() {
             <Pressable
               onPress={handleSubmit}
               disabled={loading}
-              className="bg-emerald-600 rounded-2xl py-4 items-center active:bg-emerald-700"
+              className="bg-[#d4af37] rounded-2xl py-4 items-center active:bg-[#b89628]"
             >
               {loading ? (
-                <ActivityIndicator color="#ffffff" />
+                <ActivityIndicator color="#001633" />
               ) : (
-                <Text className="text-white font-bold text-base">
+                <Text className="text-[#001633] font-bold text-base">
                   Submit Registration
                 </Text>
               )}
@@ -435,9 +435,9 @@ export default function RegisterVehicleScreen() {
         {step < 3 && (
           <Pressable
             onPress={nextStep}
-            className="bg-emerald-600 rounded-2xl py-4 items-center mt-6 active:bg-emerald-700"
+            className="bg-[#d4af37] rounded-2xl py-4 items-center mt-6 active:bg-[#b89628]"
           >
-            <Text className="text-white font-bold text-base">Continue →</Text>
+            <Text className="text-[#001633] font-bold text-base">Continue →</Text>
           </Pressable>
         )}
       </ScrollView>

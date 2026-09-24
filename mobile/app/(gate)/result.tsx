@@ -65,7 +65,7 @@ export default function GateResultScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-gray-950"
+      className="flex-1 bg-[#001633]"
       contentContainerClassName="flex-1 pb-10"
     >
       {/* Full-bleed decision banner */}
@@ -92,11 +92,11 @@ export default function GateResultScreen() {
       <View className="px-5 pt-6 gap-4">
         {/* Vehicle info */}
         {vehicle ? (
-          <View className="bg-gray-900 rounded-2xl p-5 border border-gray-800">
-            <Text className="text-gray-400 text-xs font-semibold uppercase mb-3">
+          <View className="bg-[#002147] rounded-2xl p-5 border border-[#0d3366]">
+            <Text className="text-[#f5c542] text-xs font-semibold uppercase mb-3">
               Vehicle
             </Text>
-            <View className="bg-white rounded-xl px-4 py-2 self-start mb-4">
+            <View className="bg-white border-2 border-[#d4af37] rounded-xl px-4 py-2 self-start mb-4">
               <Text className="font-black text-gray-900 text-2xl tracking-widest">
                 {vehicle.plateNumber}
               </Text>
@@ -109,7 +109,7 @@ export default function GateResultScreen() {
             <Row label="Contact" value={vehicle.ownerContact} />
           </View>
         ) : (
-          <View className="bg-gray-900 rounded-2xl p-5 items-center">
+          <View className="bg-[#002147] border border-[#0d3366] rounded-2xl p-5 items-center">
             <Text className="text-gray-400 text-sm">
               No vehicle record found
             </Text>
@@ -120,13 +120,13 @@ export default function GateResultScreen() {
         {!showOverride ? (
           <Pressable
             onPress={() => setShowOverride(true)}
-            className="bg-gray-800 rounded-2xl py-4 px-5 flex-row items-center justify-between active:bg-gray-700"
+            className="bg-[#002147] border border-[#0d3366] rounded-2xl py-4 px-5 flex-row items-center justify-between active:bg-[#001d40]"
           >
-            <Text className="text-gray-300 font-medium">Manual Override</Text>
-            <Text className="text-gray-500 text-xs">Officer discretion</Text>
+            <Text className="text-white font-medium">Manual Override</Text>
+            <Text className="text-[#f5c542] text-xs font-semibold">Officer discretion</Text>
           </Pressable>
         ) : (
-          <View className="bg-gray-900 rounded-2xl p-5 border border-gray-700">
+          <View className="bg-[#002147] rounded-2xl p-5 border border-[#d4af37]/35">
             <Text className="text-white font-bold mb-4">Manual Override</Text>
 
             {/* Override decision toggle */}
@@ -140,7 +140,7 @@ export default function GateResultScreen() {
                       ? d === "granted"
                         ? "border-emerald-500 bg-emerald-900/50"
                         : "border-red-500 bg-red-900/30"
-                      : "border-gray-700"
+                      : "border-[#0d3366] bg-[#001633]"
                   }`}
                 >
                   <Text
@@ -159,11 +159,11 @@ export default function GateResultScreen() {
             </View>
 
             {/* Reason */}
-            <Text className="text-gray-400 text-sm mb-2">Reason *</Text>
+            <Text className="text-gray-300 text-sm mb-2">Reason *</Text>
             <TextInput
-              className="bg-gray-800 text-white rounded-xl px-4 py-3 text-sm border border-gray-700 mb-4"
+              className="bg-[#001633] text-white rounded-xl px-4 py-3 text-sm border border-[#0d3366] mb-4"
               placeholder="State the reason for this override…"
-              placeholderTextColor="#6b7280"
+              placeholderTextColor="#64748b"
               multiline
               numberOfLines={3}
               value={overrideReason}
@@ -173,7 +173,7 @@ export default function GateResultScreen() {
             <View className="flex-row gap-3">
               <Pressable
                 onPress={() => setShowOverride(false)}
-                className="flex-1 py-3 rounded-xl bg-gray-700 items-center"
+                className="flex-1 py-3 rounded-xl bg-[#001633] border border-[#0d3366] items-center"
               >
                 <Text className="text-gray-300 font-semibold text-sm">
                   Cancel
@@ -182,12 +182,12 @@ export default function GateResultScreen() {
               <Pressable
                 onPress={handleOverride}
                 disabled={submitting}
-                className="flex-1 py-3 rounded-xl bg-amber-700 items-center active:bg-amber-800"
+                className="flex-1 py-3 rounded-xl bg-[#d4af37] items-center active:bg-[#b89628]"
               >
                 {submitting ? (
-                  <ActivityIndicator color="#fff" />
+                  <ActivityIndicator color="#001633" />
                 ) : (
-                  <Text className="text-white font-bold text-sm">
+                  <Text className="text-[#001633] font-bold text-sm">
                     Log Override
                   </Text>
                 )}
@@ -199,9 +199,9 @@ export default function GateResultScreen() {
         {/* Back to scanner */}
         <Pressable
           onPress={() => router.replace("/(gate)/" as never)}
-          className="bg-emerald-700 rounded-2xl py-4 items-center active:bg-emerald-800 mt-2"
+          className="bg-[#d4af37] rounded-2xl py-4 items-center active:bg-[#b89628] mt-2"
         >
-          <Text className="text-white font-bold text-base">← Next Vehicle</Text>
+          <Text className="text-[#001633] font-bold text-base">← Next Vehicle</Text>
         </Pressable>
       </View>
     </ScrollView>

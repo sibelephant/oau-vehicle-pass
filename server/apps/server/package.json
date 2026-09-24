@@ -18,6 +18,7 @@
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "jose": "^6.2.12",
+    "morgan": "^1.12.1",
     "tsdown": "^0.23.0",
     "varlock": "1.18.0",
     "zod": "^4.5.4"
@@ -26,6 +27,7 @@
     "@oau-vehicle-pass/config": "*",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/morgan": "^1.9.10",
     "@types/node": "^26.4.1",
     "tsx": "^4.23.13",
     "typescript": "^6.0.3"

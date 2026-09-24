@@ -24,7 +24,7 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
         justifyContent: "space-between",
         padding: "20px 32px",
         borderBottom: "1px solid var(--border-subtle)",
-        background: "rgba(16, 23, 38, 0.6)",
+        background: "rgba(0, 26, 56, 0.85)",
         backdropFilter: "blur(12px)",
         position: "sticky",
         top: 0,
@@ -77,9 +77,9 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
           />
 
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <QrCode size={14} color="#3b82f6" />
+            <QrCode size={14} color="#d4af37" />
             <span style={{ color: "var(--text-muted)" }}>QR Engine</span>
-            <span style={{ color: "#60a5fa", fontWeight: 700 }}>READY</span>
+            <span style={{ color: "#f5c542", fontWeight: 700 }}>READY</span>
           </div>
         </div>
 

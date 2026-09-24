@@ -124,8 +124,8 @@ function RootNavigator() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-gray-950 items-center justify-center">
-        <ActivityIndicator size="large" color="#10b981" />
+      <View className="flex-1 bg-[#001633] items-center justify-center">
+        <ActivityIndicator size="large" color="#d4af37" />
       </View>
     );
   }
