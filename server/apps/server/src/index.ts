@@ -14,8 +14,13 @@ const app = express();
 
 app.use(morgan("dev"));
 
+// CORS_ORIGIN may be a single URL or a comma-separated list of URLs
+const corsOriginEnv = ENV.CORS_ORIGIN || process.env.CORS_ORIGIN || "";
 const allowedCorsOrigins = [
-  ENV.CORS_ORIGIN,
+  ...corsOriginEnv.split(",").map((o) => o.trim()),
+  // Production origins — always trusted regardless of env var
+  "https://oau-vehicle-pass.vercel.app",
+  // Local development
   "http://localhost:3000",
   "http://localhost:3001",
   "http://localhost:5173",

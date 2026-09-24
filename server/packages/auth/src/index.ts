@@ -27,12 +27,17 @@ export function createAuth(
     );
   }
 
+  // CORS_ORIGIN may be a single URL or a comma-separated list of URLs
+  const corsOrigins = corsOrigin
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
+
   const allowedOrigins = [
-    corsOrigin,
-    "oauvehiclepass://",
-    "exp://",
-    "exp://*",
-    "exp://**",
+    ...corsOrigins,
+    // Production origins — always trusted regardless of env var
+    "https://oau-vehicle-pass.vercel.app",
+    // Local development
     "http://localhost:3000",
     "http://localhost:3001",
     "http://localhost:5173",
