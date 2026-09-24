@@ -11,11 +11,31 @@ import reportsRouter from "./routes/reports";
 
 const app = express();
 
+const allowedCorsOrigins = [
+  ENV.CORS_ORIGIN,
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "http://localhost:8081",
+  "http://10.0.2.2:3000",
+  "http://10.0.2.2:8081",
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: ENV.CORS_ORIGIN,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl)
+      if (!origin) return callback(null, true);
+      if (
+        allowedCorsOrigins.includes(origin) ||
+        origin.startsWith("exp://") ||
+        origin.startsWith("oauvehiclepass://")
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "expo-origin"],
     credentials: true,
   }),
 );

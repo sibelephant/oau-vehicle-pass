@@ -37,6 +37,24 @@ async function request<T>(path: string, options: ApiOptions = {}): Promise<T> {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
+  try {
+    const { authClient } = await import("./auth-client");
+    const cookie = await (authClient as any).getCookie?.();
+    if (cookie) {
+      headers["cookie"] = cookie;
+      if (!headers["Authorization"]) {
+        const match = cookie.match(/(?:__Secure-)?better-auth\.session_token=([^;]+)/);
+        if (match?.[1]) {
+          const rawToken = decodeURIComponent(match[1]);
+          const sessionToken = rawToken.split(".")[0];
+          headers["Authorization"] = `Bearer ${sessionToken}`;
+        }
+      }
+    }
+  } catch {
+    // Ignore storage read error
+  }
+
   const res = await fetch(`${API_BASE}${path}`, {
     method,
     headers,

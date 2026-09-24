@@ -1,4 +1,5 @@
 import { authClient } from "@/lib/auth-client";
+import { useAuth } from "@/app/_layout";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -15,6 +16,7 @@ import {
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { refetch } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,8 +37,9 @@ export default function LoginScreen() {
           "Login Failed",
           result.error.message ?? "Invalid credentials",
         );
+        return;
       }
-      // Navigation handled by root layout auth guard
+      await refetch();
     } catch (e: any) {
       Alert.alert("Error", e?.message ?? "Something went wrong");
     } finally {

@@ -2,6 +2,8 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import type { Database } from "@oau-vehicle-pass/db";
 import * as schema from "@oau-vehicle-pass/db/schema/auth";
 import { betterAuth } from "better-auth";
+import { expo } from "@better-auth/expo";
+import { bearer } from "better-auth/plugins";
 
 export type AuthConfig = {
   BETTER_AUTH_URL: string;
@@ -24,12 +26,24 @@ export function createAuth(
     );
   }
 
+  const allowedOrigins = [
+    corsOrigin,
+    "oauvehiclepass://",
+    "exp://",
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:8081",
+    "http://10.0.2.2:3000",
+    "http://10.0.2.2:8081",
+    ...desktopOrigins,
+  ].filter(Boolean);
+
   return betterAuth({
     database: drizzleAdapter(database, {
       provider: "pg",
       schema,
     }),
-    trustedOrigins: [corsOrigin, ...desktopOrigins].filter(Boolean),
+    trustedOrigins: allowedOrigins,
     emailAndPassword: { enabled: true },
     secret,
     baseURL: baseURL || "http://localhost:3000",
@@ -50,7 +64,10 @@ export function createAuth(
         },
       },
     },
-    plugins: [],
+    plugins: [
+      expo(),
+      bearer(),
+    ],
   });
 }
 

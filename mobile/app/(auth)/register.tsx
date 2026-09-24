@@ -1,4 +1,5 @@
 import { authClient, type UserRole } from "@/lib/auth-client";
+import { useAuth } from "@/app/_layout";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -31,6 +32,7 @@ const ROLES: { value: UserRole; label: string; description: string; emoji: strin
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const { refetch } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -57,8 +59,16 @@ export default function RegisterScreen() {
 
       if (result.error) {
         Alert.alert("Registration Failed", result.error.message ?? "Could not create account");
+        return;
       }
-      // Navigation handled by root layout auth guard
+
+      await refetch();
+
+      if (role === "gate_officer" || role === "admin") {
+        router.replace("/(gate)/" as never);
+      } else {
+        router.replace("/(driver)/" as never);
+      }
     } catch (e: any) {
       Alert.alert("Error", e?.message ?? "Something went wrong");
     } finally {
