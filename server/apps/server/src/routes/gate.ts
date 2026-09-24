@@ -3,7 +3,8 @@ import { jwtVerify } from "jose";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 
-import { accessLog } from "@oau-vehicle-pass/db/schema/vehicles";
+import { and, eq, gt, gte, sql } from "drizzle-orm";
+import { accessLog, vehicle, vehiclePass } from "@oau-vehicle-pass/db/schema/vehicles";
 
 import { requireRole } from "../middleware/roles";
 import { normalizePlate, recognizePlateFromImage } from "../services/anpr";
@@ -219,14 +220,18 @@ router.get("/today", gateAuth, async (_req, res) => {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
-  const logs = await db.query.accessLog.findMany({
-    where: (l, { gte }) => gte(l.timestamp, todayStart),
-    with: { vehicle: true },
-    orderBy: (l, { desc }) => [desc(l.timestamp)],
-    limit: 100,
-  });
+  const logs = await db
+    .select({
+      log: accessLog,
+      vehicle: vehicle,
+    })
+    .from(accessLog)
+    .leftJoin(vehicle, eq(accessLog.vehicleId, vehicle.id))
+    .where(gte(accessLog.timestamp, todayStart))
+    .orderBy(sql`${accessLog.timestamp} DESC`)
+    .limit(100);
 
-  res.json(logs);
+  res.json(logs.map((l) => ({ ...l.log, vehicle: l.vehicle })));
 });
 
 // ─── Offline Synchronization ──────────────────────────────────────────────────
@@ -237,30 +242,35 @@ router.get("/today", gateAuth, async (_req, res) => {
 router.get("/sync", gateAuth, async (_req, res) => {
   const now = new Date();
 
-  // Active unexpired, unrevoked passes
-  const activePasses = await db.query.vehiclePass.findMany({
-    where: (p, { and, eq, gt }) => and(eq(p.isRevoked, false), gt(p.expiresAt, now)),
-    with: { vehicle: true },
-  });
+  // Active unexpired, unrevoked passes with vehicle details
+  const activePasses = await db
+    .select({
+      pass: vehiclePass,
+      vehicle: vehicle,
+    })
+    .from(vehiclePass)
+    .innerJoin(vehicle, eq(vehiclePass.vehicleId, vehicle.id))
+    .where(and(eq(vehiclePass.isRevoked, false), gt(vehiclePass.expiresAt, now)));
 
   const whitelist = activePasses
-    .filter((p) => p.vehicle && p.vehicle.status === "approved")
+    .filter((p) => p.vehicle.status === "approved")
     .map((p) => ({
-      passId: p.id,
-      vehicleId: p.vehicleId,
-      plateNumber: p.vehicle!.plateNumber,
-      category: p.vehicle!.category,
-      ownerName: p.vehicle!.ownerName,
-      make: p.vehicle!.make,
-      model: p.vehicle!.model,
-      color: p.vehicle!.color,
-      expiresAt: p.expiresAt.toISOString(),
+      passId: p.pass.id,
+      vehicleId: p.pass.vehicleId,
+      plateNumber: p.vehicle.plateNumber,
+      category: p.vehicle.category,
+      ownerName: p.vehicle.ownerName,
+      make: p.vehicle.make,
+      model: p.vehicle.model,
+      color: p.vehicle.color,
+      expiresAt: p.pass.expiresAt.toISOString(),
     }));
 
   // All blacklisted vehicles
-  const blacklisted = await db.query.vehicle.findMany({
-    where: (v, { eq }) => eq(v.status, "blacklisted"),
-  });
+  const blacklisted = await db
+    .select()
+    .from(vehicle)
+    .where(eq(vehicle.status, "blacklisted"));
 
   const blacklist = blacklisted.map((v) => ({
     plateNumber: v.plateNumber,

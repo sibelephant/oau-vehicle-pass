@@ -78,7 +78,7 @@ app.options("/{*splat}", cors(corsOptions));
 
 // Better-auth handles its own body parsing
 const betterAuthHandler = toNodeHandler(auth);
-app.all("/api/auth{/*path}", (req, res, next) => {
+app.all("/api/auth{/*path}", (req, res, _next) => {
   betterAuthHandler(req, res).catch((err: unknown) => {
     console.error("Better-auth unhandled error:", err);
     if (!res.headersSent) {
