@@ -1,16 +1,30 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ShieldCheck, Lock, Mail, AlertCircle, ArrowRight } from "lucide-react";
 import { authClient, type SessionUser } from "../lib/auth-client";
+import { useAuth } from "../context/AuthContext";
 
 interface LoginViewProps {
-  onSuccess: (user: SessionUser) => void;
+  onSuccess?: (user: SessionUser) => void;
 }
 
 export const LoginView: React.FC<LoginViewProps> = ({ onSuccess }) => {
+  const { user, setUser, authChecked } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const from = (location.state as any)?.from?.pathname || "/";
+
+  useEffect(() => {
+    if (authChecked && user) {
+      navigate("/", { replace: true });
+    }
+  }, [authChecked, user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,29 +44,33 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSuccess }) => {
       }
 
       // Check session role
-      const session = await authClient.getSession();
-      const user = session?.data?.user as SessionUser | undefined;
+      const session = await authClient.getSession({ query: {} });
+      const sessionUser = session?.data?.user as unknown as SessionUser | undefined;
 
-      if (!user) {
+      if (!sessionUser) {
         setError("Failed to retrieve user session");
         setLoading(false);
         return;
       }
 
-      if (user.role !== "admin" && user.role !== "gate_officer") {
+      if (sessionUser.role !== "admin" && sessionUser.role !== "gate_officer") {
         setError(
           "Access restricted: This portal is for Security Officers & Administrators only.",
         );
-        await authClient.signOut();
+        await authClient.signOut({});
         setLoading(false);
         return;
       }
 
-      onSuccess(user);
+      setUser(sessionUser);
+      if (onSuccess) {
+        onSuccess(sessionUser);
+      }
+      navigate(from, { replace: true });
     } catch (err: any) {
       setError(
         err.message ||
-          "Failed to authenticate. Is the server running on port 3000?",
+          "Failed to authenticate. Is the server running?",
       );
     } finally {
       setLoading(false);

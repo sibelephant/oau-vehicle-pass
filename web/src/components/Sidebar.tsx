@@ -1,4 +1,5 @@
 import React from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Car,
@@ -7,50 +8,51 @@ import {
   ShieldCheck,
   Radio,
 } from "lucide-react";
-import type { SessionUser } from "../lib/auth-client";
+import { useAuth } from "../context/AuthContext";
 
 export type NavTab = "overview" | "gate-feed" | "approvals" | "blacklist";
 
 interface SidebarProps {
-  currentTab: NavTab;
-  onSelectTab: (tab: NavTab) => void;
-  user: SessionUser | null;
-  onSignOut: () => void;
   pendingApprovalsCount?: number;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
-  currentTab,
-  onSelectTab,
-  user,
-  onSignOut,
   pendingApprovalsCount = 0,
 }) => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
   const navItems = [
     {
-      id: "overview" as NavTab,
+      to: "/",
+      end: true,
       label: "Overview & Analytics",
       icon: LayoutDashboard,
     },
     {
-      id: "gate-feed" as NavTab,
+      to: "/gate-feed",
       label: "Live Gate Feed",
       icon: Radio,
       badge: "LIVE",
       badgeColor: "success",
     },
     {
-      id: "approvals" as NavTab,
+      to: "/approvals",
       label: "Vehicle Approvals",
       icon: Car,
       count: pendingApprovalsCount,
     },
     {
-      id: "blacklist" as NavTab,
+      to: "/blacklist",
       label: "Blacklist Registry",
       icon: Ban,
     },
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/login");
+  };
 
   return (
     <aside
@@ -151,18 +153,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = currentTab === item.id;
             return (
-              <button
-                key={item.id}
-                onClick={() => onSelectTab(item.id)}
-                style={{
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                style={({ isActive }) => ({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
                   padding: "10px 14px",
                   borderRadius: "8px",
                   border: "none",
+                  textDecoration: "none",
                   background: isActive
                     ? "rgba(212, 175, 55, 0.12)"
                     : "transparent",
@@ -175,56 +178,51 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   borderLeft: isActive
                     ? "3px solid #d4af37"
                     : "3px solid transparent",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background =
-                      "rgba(255, 255, 255, 0.04)";
-                    e.currentTarget.style.color = "var(--text-main)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.color = "var(--text-muted)";
-                  }
-                }}
+                })}
               >
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: "12px" }}
-                >
-                  <Icon
-                    size={18}
-                    color={isActive ? "#f5c542" : "currentColor"}
-                  />
-                  <span>{item.label}</span>
-                </div>
+                {({ isActive }) => (
+                  <>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                      }}
+                    >
+                      <Icon
+                        size={18}
+                        color={isActive ? "#f5c542" : "currentColor"}
+                      />
+                      <span>{item.label}</span>
+                    </div>
 
-                {item.badge && (
-                  <span
-                    className={`badge badge-${item.badgeColor}`}
-                    style={{ padding: "2px 6px", fontSize: "0.65rem" }}
-                  >
-                    {item.badge}
-                  </span>
-                )}
+                    {item.badge && (
+                      <span
+                        className={`badge badge-${item.badgeColor}`}
+                        style={{ padding: "2px 6px", fontSize: "0.65rem" }}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
 
-                {typeof item.count === "number" && item.count > 0 && (
-                  <span
-                    style={{
-                      background: "rgba(245, 158, 11, 0.2)",
-                      color: "#fbbf24",
-                      border: "1px solid rgba(245, 158, 11, 0.4)",
-                      padding: "2px 7px",
-                      borderRadius: "10px",
-                      fontSize: "0.75rem",
-                      fontWeight: 700,
-                    }}
-                  >
-                    {item.count}
-                  </span>
+                    {typeof item.count === "number" && item.count > 0 && (
+                      <span
+                        style={{
+                          background: "rgba(245, 158, 11, 0.2)",
+                          color: "#fbbf24",
+                          border: "1px solid rgba(245, 158, 11, 0.4)",
+                          padding: "2px 7px",
+                          borderRadius: "10px",
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
+                        }}
+                      >
+                        {item.count}
+                      </span>
+                    )}
+                  </>
                 )}
-              </button>
+              </NavLink>
             );
           })}
         </nav>
@@ -289,7 +287,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         <button
-          onClick={onSignOut}
+          onClick={handleSignOut}
           className="btn btn-secondary btn-sm"
           style={{ width: "100%", justifyContent: "center" }}
         >
