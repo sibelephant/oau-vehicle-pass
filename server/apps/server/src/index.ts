@@ -20,25 +20,21 @@ const allowedCorsOrigins = [
   "http://10.0.2.2:8081",
 ].filter(Boolean);
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. mobile apps, curl)
-      if (!origin) return callback(null, true);
-      if (
-        allowedCorsOrigins.includes(origin) ||
-        origin.startsWith("exp://") ||
-        origin.startsWith("oauvehiclepass://")
-      ) {
-        return callback(null, true);
-      }
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) => {
+    // Native clients and command-line health checks do not send an Origin header.
+    if (!origin || allowedCorsOrigins.includes(origin)) {
       return callback(null, true);
-    },
-    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "expo-origin"],
-    credentials: true,
-  }),
-);
+    }
+    return callback(new Error(`Origin not allowed: ${origin}`));
+  },
+  methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "expo-origin"],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+app.options("/{*splat}", cors(corsOptions));
 
 // Better-auth handles its own body parsing
 app.all("/api/auth{/*path}", toNodeHandler(auth));
