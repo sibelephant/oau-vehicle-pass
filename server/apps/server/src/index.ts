@@ -65,7 +65,11 @@ const corsOptions: cors.CorsOptions = {
     }
   },
   methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "expo-origin", "Cookie"],
+  // Omitting allowedHeaders causes the cors package to reflect whatever
+  // headers the client requests (Access-Control-Request-Headers), which
+  // avoids mismatches with headers injected by better-auth's client library.
+  allowedHeaders: undefined,
+  exposedHeaders: ["x-request-id"],
   credentials: true,
 };
 
