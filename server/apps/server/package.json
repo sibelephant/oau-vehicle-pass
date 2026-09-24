@@ -12,6 +12,7 @@
     "auth:generate": "varlock run -- npx --yes auth@latest generate --config src/services.ts --output ../../packages/db/src/schema/auth.ts --yes"
   },
   "dependencies": {
+    "@better-auth/infra": "^0.4.11",
     "@oau-vehicle-pass/auth": "*",
     "@oau-vehicle-pass/db": "*",
     "better-auth": "1.7.5",
