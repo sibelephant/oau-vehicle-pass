@@ -18,24 +18,46 @@ const allowedCorsOrigins = [
   ENV.CORS_ORIGIN,
   "http://localhost:3000",
   "http://localhost:3001",
+  "http://localhost:5173",
   "http://localhost:8081",
   "http://10.0.2.2:3000",
   "http://10.0.2.2:8081",
 ].filter(Boolean);
 
-const corsOptions = {
-  origin: (
-    origin: string | undefined,
-    callback: (error: Error | null, allow?: boolean) => void,
-  ) => {
-    // Native clients and command-line health checks do not send an Origin header.
-    if (!origin || allowedCorsOrigins.includes(origin)) {
-      return callback(null, true);
+const isAllowedOrigin = (origin: string | undefined): boolean => {
+  // Native mobile apps, curl, and tools do not send an Origin header
+  if (!origin) return true;
+
+  // Exact whitelist match
+  if (allowedCorsOrigins.includes(origin)) return true;
+
+  // Mobile custom URL schemes (Expo Go and native app schemes)
+  if (origin.startsWith("exp://") || origin.startsWith("oauvehiclepass://")) {
+    return true;
+  }
+
+  // In development, allow localhost on any port and local network IPs (for physical device testing)
+  if (process.env.NODE_ENV !== "production") {
+    if (/^https?:\/\/localhost(:\d+)?$/.test(origin)) return true;
+    if (/^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) return true;
+    if (/^https?:\/\/192\.168\.\d+\.\d+(:\d+)?$/.test(origin)) return true;
+    if (/^https?:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/.test(origin)) return true;
+  }
+
+  return false;
+};
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    if (isAllowedOrigin(origin)) {
+      callback(null, true);
+    } else {
+      // Reject disallowed origins cleanly without throwing a 500 error
+      callback(null, false);
     }
-    return callback(new Error(`Origin not allowed: ${origin}`));
   },
   methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "expo-origin"],
+  allowedHeaders: ["Content-Type", "Authorization", "expo-origin", "Cookie"],
   credentials: true,
 };
 
