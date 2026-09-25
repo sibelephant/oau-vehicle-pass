@@ -55,7 +55,27 @@ export function createAuth(
       provider: "pg",
       schema,
     }),
-    trustedOrigins: allowedOrigins,
+    trustedOrigins: (request?: Request) => {
+      const origins = [...allowedOrigins];
+
+      // Extract the origin from the incoming request
+      const reqOrigin = request?.headers?.get?.("origin") ?? "";
+
+      // Expo Go and native app custom URL schemes
+      if (
+        reqOrigin.startsWith("exp://") ||
+        reqOrigin.startsWith("oauvehiclepass://")
+      ) {
+        origins.push(reqOrigin);
+      }
+
+      // Allow local network IPs for physical device testing (Expo on LAN)
+      if (/^https?:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+)(:\d+)?$/.test(reqOrigin)) {
+        origins.push(reqOrigin);
+      }
+
+      return origins;
+    },
     emailAndPassword: { enabled: true },
     secret,
     baseURL: baseURL || "http://localhost:3000",
