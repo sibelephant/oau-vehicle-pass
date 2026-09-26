@@ -1,6 +1,6 @@
 import { gateApi, type AccessLog } from "@/lib/api";
+import { useList } from "@/lib/use-list";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -56,21 +56,7 @@ function LogItem({ log }: { log: AccessLog }) {
 
 export default function GateLogScreen() {
   const router = useRouter();
-  const [logs, setLogs] = useState<AccessLog[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const fetchLogs = useCallback(async () => {
-    try {
-      const data = await gateApi.todayLog();
-      setLogs(data);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => { fetchLogs(); }, [fetchLogs]);
+  const { data: logs, loading, refreshing, onRefresh } = useList(gateApi.todayLog);
 
   const granted = logs.filter((l) => l.decision === "granted").length;
   const denied = logs.filter((l) => l.decision === "denied").length;
@@ -82,7 +68,7 @@ export default function GateLogScreen() {
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
-          onRefresh={() => { setRefreshing(true); fetchLogs(); }}
+          onRefresh={onRefresh}
           tintColor="#d4af37"
         />
       }

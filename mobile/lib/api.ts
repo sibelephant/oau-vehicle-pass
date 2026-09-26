@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import type { OfflineAccessLog, SyncSnapshot } from "./offline-gate";
 
 /**
  * Base URL for the OAU Vehicle Pass API.
@@ -14,43 +15,33 @@ export const API_BASE =
 type ApiOptions = {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
   body?: object;
-  token?: string;
 };
 
 export class ApiError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-  ) {
+  status: number;
+
+  constructor(status: number, message: string) {
     super(message);
     this.name = "ApiError";
+    this.status = status;
   }
 }
 
 async function request<T>(path: string, options: ApiOptions = {}): Promise<T> {
-  const { method = "GET", body, token } = options;
+  const { method = "GET", body } = options;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
 
   try {
     const { authClient } = await import("./auth-client");
     const cookie = await (authClient as any).getCookie?.();
     if (cookie) {
       headers["cookie"] = cookie;
-      if (!headers["Authorization"]) {
-        const match = cookie.match(/(?:__Secure-)?better-auth\.session_token=([^;]+)/);
-        if (match?.[1]) {
-          const rawToken = decodeURIComponent(match[1]);
-          const sessionToken = rawToken.split(".")[0];
-          headers["Authorization"] = `Bearer ${sessionToken}`;
-        } else if (typeof cookie === "string" && !cookie.includes("=")) {
-          headers["Authorization"] = `Bearer ${cookie.split(".")[0]}`;
-        }
+      const match = cookie.match(/(?:__Secure-)?better-auth\.session_token=([^;]+)/);
+      if (match?.[1]) {
+        headers["Authorization"] = `Bearer ${decodeURIComponent(match[1]).split(".")[0]}`;
       }
     }
   } catch {
@@ -108,7 +99,6 @@ export interface VehiclePass {
   issuedAt: string;
   expiresAt: string;
   isRevoked: boolean;
-  token?: string;
 }
 
 export interface AccessLog {
@@ -141,22 +131,13 @@ export const vehiclesApi = {
     request<Vehicle>("/api/vehicles", { method: "POST", body: data }),
 
   myVehicles: () => request<Vehicle[]>("/api/vehicles/my"),
-
-  getById: (id: string) => request<Vehicle>(`/api/vehicles/${id}`),
 };
 
 // ─── Passes ───────────────────────────────────────────────────────────────────
 
 export const passesApi = {
   issue: (vehicleId: string) =>
-    request<VehiclePass & { token: string }>(`/api/passes/issue/${vehicleId}`, {
-      method: "POST",
-    }),
-
-  verify: (token: string) =>
-    request<{ valid: boolean; reason?: string; vehicle?: Vehicle }>(
-      `/api/passes/verify?token=${encodeURIComponent(token)}`,
-    ),
+    request<VehiclePass>(`/api/passes/issue/${vehicleId}`, { method: "POST" }),
 };
 
 // ─── Gate ─────────────────────────────────────────────────────────────────────
@@ -210,25 +191,11 @@ export const gateApi = {
 
   todayLog: () => request<AccessLog[]>("/api/gate/today"),
 
-  getSyncSnapshot: () =>
-    request<{
-      syncTimestamp: string;
-      whitelist: any[];
-      blacklist: any[];
-    }>("/api/gate/sync"),
+  getSyncSnapshot: () => request<SyncSnapshot>("/api/gate/sync"),
 
-  syncOfflineLogs: (logs: any[]) =>
+  syncOfflineLogs: (logs: OfflineAccessLog[]) =>
     request<{ syncedCount: number }>("/api/gate/sync-logs", {
       method: "POST",
       body: { logs },
     }),
-};
-
-// ─── Reports ──────────────────────────────────────────────────────────────────
-
-export const reportsApi = {
-  summary: () =>
-    request<{ today: { total: number; granted: number; denied: number } }>(
-      "/api/reports/summary",
-    ),
 };

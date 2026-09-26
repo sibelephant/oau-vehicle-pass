@@ -1,9 +1,8 @@
 import { useAuth } from "@/app/_layout";
-import { vehiclesApi, type Vehicle } from "@/lib/api";
+import { vehiclesApi } from "@/lib/api";
+import { useList } from "@/lib/use-list";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -11,47 +10,10 @@ import {
   View,
 } from "react-native";
 
-const STATUS_COLORS: Record<string, string> = {
-  approved: "text-emerald-400",
-  pending: "text-amber-400",
-  rejected: "text-red-400",
-  blacklisted: "text-red-600",
-};
-
-const STATUS_BG: Record<string, string> = {
-  approved: "bg-emerald-900/50",
-  pending: "bg-amber-900/50",
-  rejected: "bg-red-900/50",
-  blacklisted: "bg-red-950",
-};
-
 export default function DriverHome() {
   const { user, signOut } = useAuth();
   const router = useRouter();
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const fetchData = useCallback(async () => {
-    try {
-      const v = await vehiclesApi.myVehicles();
-      setVehicles(v);
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchData();
-  }, [fetchData]);
+  const { data: vehicles, refreshing, onRefresh } = useList(vehiclesApi.myVehicles);
 
   const approvedCount = vehicles.filter((v) => v.status === "approved").length;
   const pendingCount = vehicles.filter((v) => v.status === "pending").length;
@@ -137,51 +99,6 @@ export default function DriverHome() {
           </View>
           <Text className="text-[#001633] text-2xl font-bold">＋</Text>
         </Pressable>
-      </View>
-
-      {/* Vehicle list */}
-      <View className="px-6">
-        <Text className="text-gray-400 text-sm font-semibold mb-3 uppercase tracking-wider">
-          Your Vehicles
-        </Text>
-
-        {loading ? (
-          <ActivityIndicator color="#d4af37" className="py-8" />
-        ) : vehicles.length === 0 ? (
-          <View className="bg-[#002147] border border-[#0d3366] rounded-2xl p-8 items-center">
-            <Text className="text-4xl mb-3">🚗</Text>
-            <Text className="text-gray-400 text-center text-sm">
-              No vehicles registered yet.{"\n"}Tap the button above to get
-              started.
-            </Text>
-          </View>
-        ) : (
-          vehicles.map((v) => (
-            <View
-              key={v.id}
-              className={`rounded-2xl p-4 mb-3 border border-[#0d3366] ${STATUS_BG[v.status] ?? "bg-[#002147]"}`}
-            >
-              <View className="flex-row items-center justify-between mb-1">
-                <Text className="text-white font-bold text-lg tracking-widest">
-                  {v.plateNumber}
-                </Text>
-                <Text
-                  className={`text-xs font-bold uppercase px-2 py-1 rounded-full ${STATUS_COLORS[v.status]}`}
-                >
-                  {v.status}
-                </Text>
-              </View>
-              <Text className="text-gray-400 text-sm capitalize">
-                {v.category} · {v.make ?? "—"} {v.model ?? ""}
-              </Text>
-              {v.status === "rejected" && v.rejectionReason && (
-                <Text className="text-red-400 text-xs mt-2">
-                  ⚠ {v.rejectionReason}
-                </Text>
-              )}
-            </View>
-          ))
-        )}
       </View>
     </ScrollView>
   );

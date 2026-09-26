@@ -1,9 +1,5 @@
-import { Text, View } from "react-native";
-
+// The auth guard in app/_layout.tsx owns this route; it only needs to render
+// something while the session loads.
 export default function Index() {
-  return (
-    <View className="flex-1 justify-center items-center">
-      <Text className="text-5xl text-red-200">Welcome to bare bones</Text>
-    </View>
-  );
+  return null;
 }

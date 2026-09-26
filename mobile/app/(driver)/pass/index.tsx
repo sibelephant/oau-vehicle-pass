@@ -1,5 +1,6 @@
-import { passesApi, vehiclesApi, type Vehicle, type VehiclePass } from "@/lib/api";
-import { useCallback, useEffect, useState } from "react";
+import { passesApi, vehiclesApi, type VehiclePass } from "@/lib/api";
+import { useList } from "@/lib/use-list";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -47,23 +48,15 @@ function PassCountdown({ expiresAt }: { expiresAt: string }) {
 }
 
 export default function QrPassScreen() {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const {
+    data: vehicles,
+    loading,
+    refreshing,
+    onRefresh,
+    reload,
+  } = useList(vehiclesApi.myVehicles);
   const [selectedIdx, setSelectedIdx] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [issuing, setIssuing] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const fetchData = useCallback(async () => {
-    try {
-      const v = await vehiclesApi.myVehicles();
-      setVehicles(v);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => { fetchData(); }, [fetchData]);
 
   const selected = vehicles[selectedIdx];
   const activePass: VehiclePass | undefined = selected?.passes?.[0];
@@ -72,10 +65,8 @@ export default function QrPassScreen() {
     if (!selected) return;
     setIssuing(true);
     try {
-      const pass = await passesApi.issue(selected.id);
-      // Re-fetch to get updated pass
-      const updated = await vehiclesApi.myVehicles();
-      setVehicles(updated);
+      await passesApi.issue(selected.id);
+      await reload();
       Alert.alert("Pass Issued ✅", "Your QR pass is ready. Show it at the campus gate.");
     } catch (e: any) {
       Alert.alert("Error", e?.message ?? "Could not issue pass");
@@ -89,7 +80,11 @@ export default function QrPassScreen() {
       className="flex-1 bg-[#001633]"
       contentContainerClassName="px-5 pb-16"
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} tintColor="#d4af37" />
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor="#d4af37"
+        />
       }
     >
       <View className="pt-14 pb-4">

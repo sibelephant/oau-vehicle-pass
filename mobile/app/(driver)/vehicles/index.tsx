@@ -1,5 +1,5 @@
 import { vehiclesApi, type Vehicle } from "@/lib/api";
-import { useCallback, useEffect, useState } from "react";
+import { useList } from "@/lib/use-list";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -79,30 +79,19 @@ function Detail({ label, value }: { label: string; value: string }) {
 }
 
 export default function VehiclesListScreen() {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const fetchVehicles = useCallback(async () => {
-    try {
-      const data = await vehiclesApi.myVehicles();
-      setVehicles(data);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchVehicles();
-  }, [fetchVehicles]);
+  const { data: vehicles, loading, refreshing, onRefresh } =
+    useList(vehiclesApi.myVehicles);
 
   return (
     <ScrollView
       className="flex-1 bg-[#001633]"
       contentContainerClassName="px-5 pb-10"
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchVehicles(); }} tintColor="#d4af37" />
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor="#d4af37"
+        />
       }
     >
       <View className="pt-14 pb-4">

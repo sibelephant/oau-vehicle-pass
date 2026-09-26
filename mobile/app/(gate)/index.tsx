@@ -1,8 +1,8 @@
 import { useAuth } from "@/app/_layout";
-import { gateApi, type Vehicle } from "@/lib/api";
+import { gateApi, type GateDecision } from "@/lib/api";
 import { offlineGate } from "@/lib/offline-gate";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Pressable,
@@ -13,13 +13,45 @@ import {
   Platform,
   ActivityIndicator,
   Modal,
-  Image,
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
 
 type ScanMode = "qr" | "plate";
+
+/** One of the four L-shaped corner brackets around the plate target. */
+function Corner({
+  side,
+}: {
+  side: "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
+}) {
+  const vertical = side.startsWith("top")
+    ? { top: -2 }
+    : { bottom: -2 };
+  const horizontal =
+    side.endsWith("Left") ? { left: -2 } : { right: -2 };
+  return (
+    <View
+      style={{
+        position: "absolute",
+        ...vertical,
+        ...horizontal,
+        width: 20,
+        height: 20,
+        borderTopWidth: side.startsWith("top") ? 4 : 0,
+        borderBottomWidth: side.startsWith("bottom") ? 4 : 0,
+        borderLeftWidth: side.endsWith("Left") ? 4 : 0,
+        borderRightWidth: side.endsWith("Right") ? 4 : 0,
+        borderColor: "#d4af37",
+        borderTopLeftRadius: side === "topLeft" ? 12 : 0,
+        borderTopRightRadius: side === "topRight" ? 12 : 0,
+        borderBottomLeftRadius: side === "bottomLeft" ? 12 : 0,
+        borderBottomRightRadius: side === "bottomRight" ? 12 : 0,
+      }}
+    />
+  );
+}
 
 export default function GateScanScreen() {
   const { user, signOut } = useAuth();
@@ -34,10 +66,9 @@ export default function GateScanScreen() {
   const lastScanRef = useRef<number>(0);
 
   // Offline Tolerance & Local Cache State
-  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
-  const [cachedWhitelistCount, setCachedWhitelistCount] = useState<number>(0);
-  const [pendingOfflineLogs, setPendingOfflineLogs] = useState<number>(0);
-  const [syncingOffline, setSyncingOffline] = useState<boolean>(false);
+  const [cachedWhitelistCount, setCachedWhitelistCount] = useState(0);
+  const [pendingOfflineLogs, setPendingOfflineLogs] = useState(0);
+  const [syncingOffline, setSyncingOffline] = useState(false);
 
   // Camera permissions & ref
   const [permission, requestPermission] = useCameraPermissions();
@@ -51,23 +82,33 @@ export default function GateScanScreen() {
   const [detectedPlateText, setDetectedPlateText] = useState("");
   const [detectedConfidence, setDetectedConfidence] = useState(0);
 
+  /** Single exit point to the grant/deny screen, online or from cache. */
+  const showResult = (
+    res: GateDecision,
+    isOffline: boolean,
+  ) => {
+    setPendingOfflineLogs(offlineGate.getPendingCount());
+    router.push({
+      pathname: "/(gate)/result" as never,
+      params: {
+        decision: res.decision,
+        reason: res.reason ?? "",
+        vehicleJson: JSON.stringify(res.vehicle),
+        isOffline: String(isOffline),
+      },
+    });
+  };
+
   async function performCacheSync() {
     setSyncingOffline(true);
     try {
       const res = await offlineGate.syncFromServer();
-      setLastSyncTime(res.lastSync);
       setCachedWhitelistCount(res.whitelistCount);
-      const pending = await offlineGate.getPendingCount();
-      setPendingOfflineLogs(pending);
     } catch {
-      // Offline fallback: load existing local cache count
-      const wl = await offlineGate.getWhitelist();
-      setCachedWhitelistCount(wl.length);
-      const last = await offlineGate.getLastSyncTime();
-      setLastSyncTime(last);
-      const pending = await offlineGate.getPendingCount();
-      setPendingOfflineLogs(pending);
+      // Offline: fall back to whatever is already cached on the device
+      setCachedWhitelistCount(offlineGate.getWhitelist().length);
     } finally {
+      setPendingOfflineLogs(offlineGate.getPendingCount());
       setSyncingOffline(false);
     }
   }
@@ -81,59 +122,35 @@ export default function GateScanScreen() {
 
   // ─── QR Code Scan Handler ──────────────────────────────────────────────────
 
-  const handleBarcodeScan = useCallback(
-    async ({ data }: { data: string }) => {
-      // Throttle: don't re-scan within 3 seconds
-      const now = Date.now();
-      if (now - lastScanRef.current < 3000 || processing) return;
-      lastScanRef.current = now;
+  const handleBarcodeScan = async ({ data }: { data: string }) => {
+    // Throttle: don't re-scan within 3 seconds
+    const now = Date.now();
+    if (now - lastScanRef.current < 3000 || processing) return;
+    lastScanRef.current = now;
 
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch {}
+
+    setProcessing(true);
+    setProcessingMessage("Verifying QR Pass…");
+    setScanning(false);
+
+    try {
+      showResult(await gateApi.scanQr(data), false);
+    } catch (e: any) {
+      // Fallback to local offline cache
+      console.log("[GateScanner] Online verify failed, checking offline whitelist:", e?.message);
       try {
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      } catch {}
-
-      setProcessing(true);
-      setProcessingMessage("Verifying QR Pass…");
-      setScanning(false);
-
-      try {
-        const result = await gateApi.scanQr(data);
-        router.push({
-          pathname: "/(gate)/result" as never,
-          params: {
-            decision: result.decision,
-            reason: result.reason ?? "",
-            vehicleJson: JSON.stringify(result.vehicle),
-            isOffline: "false",
-          },
-        });
-      } catch (e: any) {
-        // Fallback to local offline cache
-        console.log("[GateScanner] Online verify failed, checking offline whitelist:", e?.message);
-        try {
-          const offlineRes = await offlineGate.verifyQrOffline(data);
-          const pending = await offlineGate.getPendingCount();
-          setPendingOfflineLogs(pending);
-
-          router.push({
-            pathname: "/(gate)/result" as never,
-            params: {
-              decision: offlineRes.decision,
-              reason: offlineRes.reason ?? "",
-              vehicleJson: JSON.stringify(offlineRes.vehicle),
-              isOffline: "true",
-            },
-          });
-        } catch {
-          Alert.alert("Scan Error", e?.message ?? "Could not process QR code");
-          setScanning(true);
-        }
-      } finally {
-        setProcessing(false);
+        showResult(offlineGate.verifyQrOffline(data), true);
+      } catch {
+        Alert.alert("Scan Error", e?.message ?? "Could not process QR code");
+        setScanning(true);
       }
-    },
-    [processing, router],
-  );
+    } finally {
+      setProcessing(false);
+    }
+  };
 
   // ─── ANPR Camera Plate Capture & Recognition ───────────────────────────────
 
@@ -176,19 +193,13 @@ export default function GateScanScreen() {
           } catch {}
 
           // Finalize and log the plate scan
-          const verified = await gateApi.scanPlate(
-            anprResult.detectedPlate,
-            `data:image/jpeg;base64,${base64Data}`,
+          showResult(
+            await gateApi.scanPlate(
+              anprResult.detectedPlate,
+              `data:image/jpeg;base64,${base64Data}`,
+            ),
+            false,
           );
-
-          router.push({
-            pathname: "/(gate)/result" as never,
-            params: {
-              decision: verified.decision,
-              reason: verified.reason ?? "",
-              vehicleJson: JSON.stringify(verified.vehicle),
-            },
-          });
           return;
         }
 
@@ -272,35 +283,14 @@ export default function GateScanScreen() {
         capturedImageBase64 ? `data:image/jpeg;base64,${capturedImageBase64}` : undefined,
       );
 
-      router.push({
-        pathname: "/(gate)/result" as never,
-        params: {
-          decision: result.decision,
-          reason: result.reason ?? "",
-          vehicleJson: JSON.stringify(result.vehicle),
-          isOffline: "false",
-        },
-      });
-
+      showResult(result, false);
       setPlateInput("");
       setCapturedImageBase64(null);
     } catch (e: any) {
       // Fallback to offline plate verification
       console.log("[GateScanner] Online plate verify failed, trying offline cache:", e?.message);
       try {
-        const offlineRes = await offlineGate.verifyPlateOffline(plateToSubmit.trim().toUpperCase());
-        const pending = await offlineGate.getPendingCount();
-        setPendingOfflineLogs(pending);
-
-        router.push({
-          pathname: "/(gate)/result" as never,
-          params: {
-            decision: offlineRes.decision,
-            reason: offlineRes.reason ?? "",
-            vehicleJson: JSON.stringify(offlineRes.vehicle),
-            isOffline: "true",
-          },
-        });
+        showResult(offlineGate.verifyPlateOffline(plateToSubmit.trim().toUpperCase()), true);
       } catch {
         Alert.alert("Lookup Failed", e?.message ?? "Could not verify vehicle plate");
       }
@@ -452,58 +442,9 @@ export default function GateScanScreen() {
                   }}
                 >
                   {/* Corner Accent Brackets */}
-                  <View
-                    style={{
-                      position: "absolute",
-                      top: -2,
-                      left: -2,
-                      width: 20,
-                      height: 20,
-                      borderTopWidth: 4,
-                      borderLeftWidth: 4,
-                      borderColor: "#d4af37",
-                      borderTopLeftRadius: 12,
-                    }}
-                  />
-                  <View
-                    style={{
-                      position: "absolute",
-                      top: -2,
-                      right: -2,
-                      width: 20,
-                      height: 20,
-                      borderTopWidth: 4,
-                      borderRightWidth: 4,
-                      borderColor: "#d4af37",
-                      borderTopRightRadius: 12,
-                    }}
-                  />
-                  <View
-                    style={{
-                      position: "absolute",
-                      bottom: -2,
-                      left: -2,
-                      width: 20,
-                      height: 20,
-                      borderBottomWidth: 4,
-                      borderLeftWidth: 4,
-                      borderColor: "#d4af37",
-                      borderBottomLeftRadius: 12,
-                    }}
-                  />
-                  <View
-                    style={{
-                      position: "absolute",
-                      bottom: -2,
-                      right: -2,
-                      width: 20,
-                      height: 20,
-                      borderBottomWidth: 4,
-                      borderRightWidth: 4,
-                      borderColor: "#d4af37",
-                      borderBottomRightRadius: 12,
-                    }}
-                  />
+                  {(["topLeft", "topRight", "bottomLeft", "bottomRight"] as const).map((side) => (
+                    <Corner key={side} side={side} />
+                  ))}
 
                   {/* Center Target Crosshair */}
                   <View className="flex-row items-center gap-2">

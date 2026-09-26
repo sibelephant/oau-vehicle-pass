@@ -1,11 +1,11 @@
-import * as SecureStore from "expo-secure-store";
-import { gateApi, type GateDecision, type Vehicle } from "./api";
+import { Directory, File, Paths } from "expo-file-system";
+import { gateApi, type GateDecision, type Vehicle, type VehicleCategory } from "./api";
 
 export interface CachedPass {
   passId: string;
   vehicleId: string;
   plateNumber: string;
-  category: "staff" | "student" | "visitor" | "commercial";
+  category: VehicleCategory;
   ownerName: string;
   make?: string | null;
   model?: string | null;
@@ -34,377 +34,189 @@ export interface SyncSnapshot {
   blacklist: CachedBlacklist[];
 }
 
-const STORAGE_KEYS = {
-  WHITELIST: "oau_gate_offline_whitelist",
-  BLACKLIST: "oau_gate_offline_blacklist",
-  LAST_SYNC: "oau_gate_offline_last_sync",
-  PENDING_LOGS: "oau_gate_offline_pending_logs",
-};
+type Channel = "qr" | "anpr";
+type OfflineDecision = GateDecision & { isOffline: true };
 
-function decodeBase64(str: string): string {
-  if (typeof (globalThis as any).atob === "function") {
-    return (globalThis as any).atob(str);
-  }
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-  let output = "";
-  str = String(str).replace(/=+$/, "");
-  if (str.length % 4 === 1) {
-    return "";
-  }
-  for (
-    let bc = 0, bs = 0, buffer: number, idx = 0;
-    (buffer = str.charCodeAt(idx++));
-    ~buffer && ((bs = bc % 4 ? bs * 64 + buffer : buffer), bc++ % 4)
-      ? (output += String.fromCharCode(255 & (bs >> ((-2 * bc) & 6))))
-      : 0
-  ) {
-    buffer = chars.indexOf(String.fromCharCode(buffer));
-  }
-  return output;
+// ponytail: plain JSON files, not SecureStore. SecureStore holds ~2KB per value
+// on Android, so a real whitelist overflows it and every vehicle gets denied.
+const dir = new Directory(Paths.document, "gate-cache");
+
+function file(name: string) {
+  if (!dir.exists) dir.create({ intermediates: true, idempotent: true });
+  return new File(dir, `${name}.json`);
 }
 
-// Base64url decoder for JWT payload
-function decodeJwtPayload(token: string): any {
+function read<T>(name: string, fallback: T): T {
   try {
-    const parts = token.split(".");
-    if (parts.length < 2) return null;
-    let base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    while (base64.length % 4) {
-      base64 += "=";
+    const f = file(name);
+    return f.exists ? (JSON.parse(f.textSync()) as T) : fallback;
+  } catch (e) {
+    console.warn(`[OfflineGate] Failed to read ${name}:`, e);
+    return fallback;
+  }
+}
+
+/** Never throws: a storage failure must not swallow a gate decision. */
+function write(name: string, value: unknown) {
+  try {
+    file(name).write(JSON.stringify(value));
+  } catch (e) {
+    console.warn(`[OfflineGate] Failed to write ${name}:`, e);
+  }
+}
+
+const B64 =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+// ponytail: hand-rolled because Hermes has no atob/btoa (facebook/hermes#1178).
+// Latin-1 only: a non-ASCII payload fails to parse and the pass is denied, which
+// is the safe direction. Swap in jose (already in the tree via better-auth) if a
+// non-ASCII plate or owner name ever has to survive offline. The gate trusts the
+// cached whitelist, not the signature. Covered by test/offline-gate.test.mjs.
+function decodeJwtPayload(token: string): Record<string, any> | null {
+  try {
+    const s = token
+      .split(".")[1]
+      .replace(/[-_]/g, (c) => (c === "-" ? "+" : "/"))
+      .replace(/=+$/, "");
+    const bytes: number[] = [];
+    for (let i = 0; i < s.length; i += 4) {
+      const [a, b, c, d] = [0, 1, 2, 3].map((j) => B64.indexOf(s[i + j] ?? "A"));
+      bytes.push(
+        (a << 2) | (b >> 4),
+        ((b & 15) << 4) | (c >> 2),
+        ((c & 3) << 6) | d,
+      );
     }
-    const decoded = decodeBase64(base64);
-    return JSON.parse(decoded);
+    // last group is short: 2 chars → 1 byte, 3 chars → 2 bytes
+    return JSON.parse(
+      String.fromCharCode(...bytes.slice(0, Math.floor(s.length / 4) * 3 + (s.length % 4 ? s.length % 4 - 1 : 0))),
+    );
   } catch {
     return null;
   }
 }
 
-function cleanPlate(plate: string): string {
-  return plate.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+const cleanPlate = (plate: string) => plate.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+
+function toVehicle(pass: CachedPass): Vehicle {
+  return {
+    id: pass.vehicleId,
+    plateNumber: pass.plateNumber,
+    category: pass.category,
+    make: pass.make ?? undefined,
+    model: pass.model ?? undefined,
+    color: pass.color ?? undefined,
+    ownerName: pass.ownerName,
+    ownerContact: "",
+    status: "approved",
+    createdAt: new Date().toISOString(),
+  };
+}
+
+/** Appends an event to the local queue, synced on the next successful pull. */
+function queueLog(log: Omit<OfflineAccessLog, "id" | "timestamp">) {
+  const queue = read<OfflineAccessLog[]>("pending-logs", []);
+  queue.push({
+    ...log,
+    id: `offline_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    timestamp: new Date().toISOString(),
+  });
+  write("pending-logs", queue);
+}
+
+/** Blacklist → whitelist → expiry, logging every outcome. */
+function verify(q: {
+  plateNumber: string;
+  passId?: string;
+  channel: Channel;
+  jwtExpired?: boolean;
+}): OfflineDecision {
+  const { plateNumber, channel } = q;
+  const clean = cleanPlate(plateNumber);
+
+  const deny = (reason: string, vehicleId?: string): OfflineDecision => {
+    queueLog({ vehicleId, plateNumber, channel, decision: "denied", overrideReason: reason });
+    return { decision: "denied", reason, plateNumber, isOffline: true };
+  };
+
+  if (q.jwtExpired) return deny("QR Pass has expired (Offline)");
+
+  const blacklisted = read<CachedBlacklist[]>("blacklist", []).find(
+    (b) => cleanPlate(b.plateNumber) === clean,
+  );
+  if (blacklisted) {
+    return deny(
+      blacklisted.reason
+        ? `Blacklisted: ${blacklisted.reason}`
+        : "Vehicle is blacklisted (Offline)",
+    );
+  }
+
+  const pass = read<CachedPass[]>("whitelist", []).find(
+    (w) => (q.passId && w.passId === q.passId) || cleanPlate(w.plateNumber) === clean,
+  );
+  if (!pass) return deny("Vehicle not found in local offline whitelist");
+
+  if (new Date(pass.expiresAt).getTime() < Date.now()) {
+    return deny("Pass expired in whitelist (Offline)", pass.vehicleId);
+  }
+
+  queueLog({
+    vehicleId: pass.vehicleId,
+    plateNumber: pass.plateNumber,
+    channel,
+    decision: "granted",
+    overrideReason: "Verified against local offline cache",
+  });
+  return { decision: "granted", vehicle: toVehicle(pass), plateNumber: pass.plateNumber, isOffline: true };
 }
 
 export const offlineGate = {
-  /**
-   * Downloads latest whitelist and blacklist from server and saves to SecureStore
-   */
-  async syncFromServer(): Promise<{ whitelistCount: number; blacklistCount: number; lastSync: string }> {
-    try {
-      const snapshot = await gateApi.getSyncSnapshot();
-      await SecureStore.setItemAsync(STORAGE_KEYS.WHITELIST, JSON.stringify(snapshot.whitelist));
-      await SecureStore.setItemAsync(STORAGE_KEYS.BLACKLIST, JSON.stringify(snapshot.blacklist));
-      await SecureStore.setItemAsync(STORAGE_KEYS.LAST_SYNC, snapshot.syncTimestamp);
-
-      // Also attempt to push any pending offline logs
-      await this.pushPendingLogs();
-
-      return {
-        whitelistCount: snapshot.whitelist.length,
-        blacklistCount: snapshot.blacklist.length,
-        lastSync: snapshot.syncTimestamp,
-      };
-    } catch (e) {
-      console.warn("[OfflineGate] Sync from server failed:", e);
-      throw e;
-    }
+  /** Pulls the whitelist/blacklist snapshot and flushes queued logs. */
+  async syncFromServer() {
+    const snapshot = await gateApi.getSyncSnapshot();
+    write("whitelist", snapshot.whitelist);
+    write("blacklist", snapshot.blacklist);
+    await this.pushPendingLogs();
+    return {
+      whitelistCount: snapshot.whitelist.length,
+      blacklistCount: snapshot.blacklist.length,
+    };
   },
 
-  /**
-   * Retrieves last synchronization timestamp
-   */
-  async getLastSyncTime(): Promise<string | null> {
-    try {
-      return await SecureStore.getItemAsync(STORAGE_KEYS.LAST_SYNC);
-    } catch {
-      return null;
-    }
-  },
+  getWhitelist: () => read<CachedPass[]>("whitelist", []),
+  getPendingCount: () => read<OfflineAccessLog[]>("pending-logs", []).length,
 
-  /**
-   * Loads cached whitelist
-   */
-  async getWhitelist(): Promise<CachedPass[]> {
-    try {
-      const json = await SecureStore.getItemAsync(STORAGE_KEYS.WHITELIST);
-      return json ? JSON.parse(json) : [];
-    } catch {
-      return [];
-    }
-  },
+  queueLog,
 
-  /**
-   * Loads cached blacklist
-   */
-  async getBlacklist(): Promise<CachedBlacklist[]> {
-    try {
-      const json = await SecureStore.getItemAsync(STORAGE_KEYS.BLACKLIST);
-      return json ? JSON.parse(json) : [];
-    } catch {
-      return [];
-    }
-  },
-
-  /**
-   * Verifies a QR token against locally cached whitelist and blacklist
-   */
-  async verifyQrOffline(token: string): Promise<GateDecision & { isOffline: boolean }> {
+  verifyQrOffline: (token: string): OfflineDecision => {
     const payload = decodeJwtPayload(token);
-    const nowSec = Math.floor(Date.now() / 1000);
-
     if (!payload) {
-      const res: GateDecision & { isOffline: boolean } = {
-        decision: "denied",
-        reason: "Invalid QR pass format (Offline)",
-        isOffline: true,
-      };
-      await this.queueLog({
-        channel: "qr",
-        decision: "denied",
-        overrideReason: res.reason,
-      });
-      return res;
+      const reason = "Invalid QR pass format (Offline)";
+      queueLog({ channel: "qr", decision: "denied", overrideReason: reason });
+      return { decision: "denied", reason, isOffline: true };
     }
-
-    // Check JWT expiry
-    if (payload.exp && payload.exp < nowSec) {
-      const res: GateDecision & { isOffline: boolean } = {
-        decision: "denied",
-        reason: "QR Pass has expired (Offline)",
-        plateNumber: payload.plateNumber,
-        isOffline: true,
-      };
-      await this.queueLog({
-        plateNumber: payload.plateNumber,
-        channel: "qr",
-        decision: "denied",
-        overrideReason: res.reason,
-      });
-      return res;
-    }
-
-    const plateNumber = payload.plateNumber || "";
-    const cleanP = cleanPlate(plateNumber);
-
-    // 1. Check Blacklist
-    const blacklist = await this.getBlacklist();
-    const blacklisted = blacklist.find((b) => cleanPlate(b.plateNumber) === cleanP);
-    if (blacklisted) {
-      const res: GateDecision & { isOffline: boolean } = {
-        decision: "denied",
-        reason: blacklisted.reason ? `Blacklisted: ${blacklisted.reason}` : "Vehicle is blacklisted (Offline)",
-        plateNumber,
-        isOffline: true,
-      };
-      await this.queueLog({
-        plateNumber,
-        channel: "qr",
-        decision: "denied",
-        overrideReason: res.reason,
-      });
-      return res;
-    }
-
-    // 2. Check Whitelist
-    const whitelist = await this.getWhitelist();
-    const matchedPass = whitelist.find(
-      (w) =>
-        (payload.passId && w.passId === payload.passId) ||
-        (cleanP && cleanPlate(w.plateNumber) === cleanP),
-    );
-
-    if (!matchedPass) {
-      const res: GateDecision & { isOffline: boolean } = {
-        decision: "denied",
-        reason: "Pass not found in local cached whitelist (Offline)",
-        plateNumber,
-        isOffline: true,
-      };
-      await this.queueLog({
-        plateNumber,
-        channel: "qr",
-        decision: "denied",
-        overrideReason: res.reason,
-      });
-      return res;
-    }
-
-    // Check pass expiration in whitelist
-    if (new Date(matchedPass.expiresAt).getTime() < Date.now()) {
-      const res: GateDecision & { isOffline: boolean } = {
-        decision: "denied",
-        reason: "Pass expired in whitelist (Offline)",
-        plateNumber,
-        isOffline: true,
-      };
-      await this.queueLog({
-        vehicleId: matchedPass.vehicleId,
-        plateNumber,
-        channel: "qr",
-        decision: "denied",
-        overrideReason: res.reason,
-      });
-      return res;
-    }
-
-    // Verified successfully offline!
-    const mockVehicle: Vehicle = {
-      id: matchedPass.vehicleId,
-      plateNumber: matchedPass.plateNumber,
-      category: matchedPass.category,
-      make: matchedPass.make || undefined,
-      model: matchedPass.model || undefined,
-      color: matchedPass.color || undefined,
-      ownerName: matchedPass.ownerName,
-      ownerContact: "",
-      status: "approved",
-      createdAt: new Date().toISOString(),
-    };
-
-    const res: GateDecision & { isOffline: boolean } = {
-      decision: "granted",
-      vehicle: mockVehicle,
-      plateNumber: matchedPass.plateNumber,
-      isOffline: true,
-    };
-
-    await this.queueLog({
-      vehicleId: matchedPass.vehicleId,
-      plateNumber: matchedPass.plateNumber,
+    return verify({
+      plateNumber: payload.plateNumber ?? "",
+      passId: payload.passId,
       channel: "qr",
-      decision: "granted",
-      overrideReason: "Verified against local offline cache",
+      jwtExpired: !!payload.exp && payload.exp < Math.floor(Date.now() / 1000),
     });
-
-    return res;
   },
 
-  /**
-   * Verifies a license plate offline against local cache
-   */
-  async verifyPlateOffline(plateNumber: string): Promise<GateDecision & { isOffline: boolean }> {
-    const cleanP = cleanPlate(plateNumber);
+  verifyPlateOffline: (plateNumber: string) =>
+    verify({ plateNumber, channel: "anpr" }),
 
-    // 1. Check Blacklist
-    const blacklist = await this.getBlacklist();
-    const blacklisted = blacklist.find((b) => cleanPlate(b.plateNumber) === cleanP);
-    if (blacklisted) {
-      const res: GateDecision & { isOffline: boolean } = {
-        decision: "denied",
-        reason: blacklisted.reason ? `Blacklisted: ${blacklisted.reason}` : "Vehicle is blacklisted (Offline)",
-        plateNumber,
-        isOffline: true,
-      };
-      await this.queueLog({
-        plateNumber,
-        channel: "anpr",
-        decision: "denied",
-        overrideReason: res.reason,
-      });
-      return res;
-    }
-
-    // 2. Check Whitelist
-    const whitelist = await this.getWhitelist();
-    const matched = whitelist.find((w) => cleanPlate(w.plateNumber) === cleanP);
-
-    if (!matched) {
-      const res: GateDecision & { isOffline: boolean } = {
-        decision: "denied",
-        reason: "Vehicle not found in local offline whitelist",
-        plateNumber,
-        isOffline: true,
-      };
-      await this.queueLog({
-        plateNumber,
-        channel: "anpr",
-        decision: "denied",
-        overrideReason: res.reason,
-      });
-      return res;
-    }
-
-    const mockVehicle: Vehicle = {
-      id: matched.vehicleId,
-      plateNumber: matched.plateNumber,
-      category: matched.category,
-      make: matched.make || undefined,
-      model: matched.model || undefined,
-      color: matched.color || undefined,
-      ownerName: matched.ownerName,
-      ownerContact: "",
-      status: "approved",
-      createdAt: new Date().toISOString(),
-    };
-
-    const res: GateDecision & { isOffline: boolean } = {
-      decision: "granted",
-      vehicle: mockVehicle,
-      plateNumber: matched.plateNumber,
-      isOffline: true,
-    };
-
-    await this.queueLog({
-      vehicleId: matched.vehicleId,
-      plateNumber: matched.plateNumber,
-      channel: "anpr",
-      decision: "granted",
-      overrideReason: "Verified against local offline cache",
-    });
-
-    return res;
-  },
-
-  /**
-   * Appends an event to the local offline queue
-   */
-  async queueLog(log: Omit<OfflineAccessLog, "id" | "timestamp">): Promise<void> {
+  async pushPendingLogs() {
+    const queue = read<OfflineAccessLog[]>("pending-logs", []);
+    if (!queue.length) return 0;
     try {
-      const json = await SecureStore.getItemAsync(STORAGE_KEYS.PENDING_LOGS);
-      const queue: OfflineAccessLog[] = json ? JSON.parse(json) : [];
-
-      queue.push({
-        ...log,
-        id: `offline_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-        timestamp: new Date().toISOString(),
-      });
-
-      await SecureStore.setItemAsync(STORAGE_KEYS.PENDING_LOGS, JSON.stringify(queue));
-    } catch (e) {
-      console.warn("[OfflineGate] Failed to queue offline log:", e);
-    }
-  },
-
-  /**
-   * Pushes pending offline logs to the server
-   */
-  async pushPendingLogs(): Promise<number> {
-    try {
-      const json = await SecureStore.getItemAsync(STORAGE_KEYS.PENDING_LOGS);
-      if (!json) return 0;
-
-      const queue: OfflineAccessLog[] = JSON.parse(json);
-      if (!queue.length) return 0;
-
-      const res = await gateApi.syncOfflineLogs(queue);
-      if (res.syncedCount > 0) {
-        // Clear or trim successfully synced logs
-        await SecureStore.deleteItemAsync(STORAGE_KEYS.PENDING_LOGS);
-      }
-      return res.syncedCount;
+      const { syncedCount } = await gateApi.syncOfflineLogs(queue);
+      if (syncedCount > 0) file("pending-logs").delete();
+      return syncedCount;
     } catch {
       // Still offline, will retry next sync
-      return 0;
-    }
-  },
-
-  /**
-   * Gets the count of pending offline logs waiting to sync
-   */
-  async getPendingCount(): Promise<number> {
-    try {
-      const json = await SecureStore.getItemAsync(STORAGE_KEYS.PENDING_LOGS);
-      const queue: OfflineAccessLog[] = json ? JSON.parse(json) : [];
-      return queue.length;
-    } catch {
       return 0;
     }
   },

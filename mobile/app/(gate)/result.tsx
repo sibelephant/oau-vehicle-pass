@@ -61,7 +61,7 @@ export default function GateResultScreen() {
       );
     } catch {
       // If server unreachable, queue override locally
-      await offlineGate.queueLog({
+      offlineGate.queueLog({
         vehicleId: vehicle?.id,
         plateNumber: vehicle?.plateNumber,
         channel: "manual",
