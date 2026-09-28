@@ -160,19 +160,20 @@ export default function QrPassScreen() {
               </View>
             ) : activePass ? (
               <View className="items-center w-full">
-                {QRCode ? (
-                  <View className="bg-white p-3 rounded-2xl">
+                {activePass.qrToken ? (
+                  <View className="bg-white p-4 rounded-2xl">
                     <QRCode
                       value={activePass.qrToken}
-                      size={220}
+                      size={260}
+                      ecl="L"
                       backgroundColor="white"
                       color="#111827"
                     />
                   </View>
                 ) : (
-                  <View className="bg-gray-800 w-56 h-56 rounded-2xl items-center justify-center">
-                    <Text className="text-gray-400 text-sm text-center px-4">
-                      QR code library loading…
+                  <View className="bg-red-900/30 rounded-2xl p-6 items-center">
+                    <Text className="text-red-400 font-semibold text-center">
+                      QR token missing — try renewing your pass
                     </Text>
                   </View>
                 )}
